@@ -1,0 +1,7 @@
+workspace/
+__pycache__/
+*.pyc
+.env
+.sandbox-installed
+kyc-sessions/
+kyc-uploads/
