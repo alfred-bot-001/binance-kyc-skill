@@ -7,7 +7,12 @@ from datetime import UTC, datetime
 
 from pydantic import BaseModel, Field
 
-from binance_kyc.models.enums import DocumentType, KYCState, VerificationStatus
+from binance_kyc.models.enums import (
+    DocumentType,
+    KYCState,
+    LivenessStatus,
+    VerificationStatus,
+)
 
 
 class PersonalInfo(BaseModel):
@@ -27,10 +32,26 @@ class DocumentInfo(BaseModel):
     back_image_path: str | None = None
 
 
-class SelfieInfo(BaseModel):
-    """Uploaded selfie metadata."""
+class LivenessInfo(BaseModel):
+    """Liveness verification state — requires browser redirect."""
 
-    image_path: str | None = None
+    url: str | None = None
+    status: LivenessStatus = LivenessStatus.PENDING
+    attempts: int = 0
+    max_attempts: int = 3
+    expires_at: datetime | None = None
+
+    @property
+    def can_retry(self) -> bool:
+        """Whether the user can attempt liveness again."""
+        return self.attempts < self.max_attempts
+
+    @property
+    def is_expired(self) -> bool:
+        """Whether the liveness URL has expired."""
+        if self.expires_at is None:
+            return False
+        return datetime.now(UTC) > self.expires_at
 
 
 class Verification(BaseModel):
@@ -64,7 +85,7 @@ class Session(BaseModel):
 
     personal_info: PersonalInfo = Field(default_factory=PersonalInfo)
     document: DocumentInfo = Field(default_factory=DocumentInfo)
-    selfie: SelfieInfo = Field(default_factory=SelfieInfo)
+    liveness: LivenessInfo = Field(default_factory=LivenessInfo)
     verification: Verification = Field(default_factory=Verification)
 
     def touch(self) -> None:

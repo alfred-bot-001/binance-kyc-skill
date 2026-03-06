@@ -1,293 +1,309 @@
 ---
 name: binance-kyc
-description: "Binance KYC verification flow via conversational chat. Guides users through identity verification step-by-step: collect personal info, capture/upload ID documents, perform liveness check, and submit for review. Designed for Telegram bot integration."
+description: "Binance KYC identity verification skill. Install this skill to let your AI assistant guide you through Binance's KYC process — collect personal info, upload ID documents, and complete liveness verification. Triggers on: 'KYC', 'verify identity', 'binance verification', '身份验证', '实名认证'."
+metadata:
+  author: "Binance KYC Team"
+  version: "0.2.0"
+  homepage: "https://github.com/alfred-bot-001/binance-kyc-skill"
 ---
 
 # Binance KYC Skill
 
-Guide users through the complete Binance KYC (Know Your Customer) verification process via conversational chat. Users interact with a Telegram bot to complete identity verification without leaving the chat interface.
+**Let your users complete Binance identity verification through natural conversation with their own AI assistant.**
 
-## Overview
+This is NOT a standalone bot. It's an OpenClaw skill that any agent can install — the user's own assistant becomes the KYC guide.
 
-This skill implements a multi-step KYC flow:
-
-1. **Welcome & Consent** — Explain the process, get user agreement
-2. **Personal Information** — Collect name, DOB, nationality, address
-3. **Document Selection** — User chooses ID type (passport, national ID, driver's license)
-4. **Document Upload** — User sends photos of their ID document (front + back if applicable)
-5. **Selfie / Liveness Check** — User sends a selfie for facial matching
-6. **Review & Submit** — Confirm all data, submit for verification
-7. **Status Updates** — Notify user of verification result
-
-## Flow Diagram
+## How It Works
 
 ```
-┌─────────────┐
-│   Start     │
-│  /start_kyc │
-└──────┬──────┘
-       │
-       ▼
-┌─────────────────┐
-│  1. Welcome &   │
-│     Consent     │
-│  (T&C, Privacy) │
-└──────┬──────────┘
-       │ User agrees
-       ▼
-┌─────────────────┐
-│ 2. Personal Info│
-│  - Full name    │
-│  - Date of birth│
-│  - Nationality  │
-│  - Address      │
-└──────┬──────────┘
-       │
-       ▼
-┌─────────────────┐
-│ 3. Select Doc   │
-│  - Passport     │
-│  - National ID  │
-│  - Driver's Lic │
-└──────┬──────────┘
-       │
-       ▼
-┌─────────────────┐
-│ 4. Upload Docs  │
-│  - Front photo  │
-│  - Back photo   │
-│  (quality check)│
-└──────┬──────────┘
-       │
-       ▼
-┌─────────────────┐
-│ 5. Selfie /     │
-│    Liveness     │
-│  - Take selfie  │
-│  - Hold ID next │
-│    to face      │
-└──────┬──────────┘
-       │
-       ▼
-┌─────────────────┐
-│ 6. Review &     │
-│    Confirm      │
-│  - Show summary │
-│  - User confirm │
-└──────┬──────────┘
-       │
-       ▼
-┌─────────────────────┐
-│ 7. Submit &         │
-│    Await Result     │
-│  - Processing...    │
-│  - Approved ✅      │
-│  - Rejected ❌      │
-│    (retry option)   │
-└─────────────────────┘
+┌──────────────────────────────────────────────────────────────┐
+│  User's AI Assistant (OpenClaw)                              │
+│  ┌─────────────────────────────────────────────────────────┐ │
+│  │  binance-kyc skill (installed)                          │ │
+│  │                                                         │ │
+│  │  Chat Flow:  Info → Docs → Review → Liveness → Done    │ │
+│  │                                        ↓                │ │
+│  │                              Binance Liveness URL       │ │
+│  │                              (user opens in browser)    │ │
+│  │                                        ↓                │ │
+│  │                              Webhook callback           │ │
+│  │                              (liveness result)          │ │
+│  └─────────────────────────────────────────────────────────┘ │
+│                         ↕ Binance KYC API                    │
+│                   ┌─────────────┐                            │
+│                   │ Binance     │                            │
+│                   │ KYC Backend │                            │
+│                   └─────────────┘                            │
+└──────────────────────────────────────────────────────────────┘
+```
+
+## When to Trigger
+
+Activate this skill when the user says any of:
+- "Start KYC", "verify my identity", "binance verification"
+- "开始KYC", "实名认证", "身份验证"
+- "KYC", "verify", "验证"
+- Or when the user's Binance account requires KYC completion
+
+## Complete Flow
+
+### Phase 1: Conversational Data Collection (in chat)
+
+```
+User: "I need to verify my Binance account"
+Agent: "I can help with that! Let's start your identity verification.
+        This takes about 3 minutes. You'll need your ID document ready.
+        Shall we begin?"
+
+User: "Yes"
+Agent: "What's your full legal name (as shown on your ID)?"
+
+User: "Zhang San"
+Agent: "Date of birth? (YYYY-MM-DD)"
+
+User: "1990-05-15"
+Agent: "Nationality?"
+
+User: "China"
+Agent: "Residential address? (street, city, postal code, country)"
+
+User: "北京市朝阳区建国路88号, 100022"
+Agent: "Which ID document will you use?
+        1️⃣ Passport
+        2️⃣ National ID Card
+        3️⃣ Driver's License"
+
+User: "2"
+Agent: "Please send a clear photo of the FRONT of your National ID Card.
+        Tips: ✅ Flat surface ✅ Good lighting ✅ All corners visible"
+
+User: [sends photo]
+Agent: "Now the BACK of your ID card."
+
+User: [sends photo]
+Agent: "Let me confirm your information:
+        👤 Zhang San
+        📅 1990-05-15
+        🌍 China
+        📍 北京市朝阳区建国路88号, 100022
+        📄 National ID Card ✅
+        Is everything correct? (Confirm / Edit)"
+
+User: "Confirm"
+```
+
+### Phase 2: Liveness Check (browser redirect)
+
+```
+Agent: "Almost done! For security, we need a quick face verification.
+        Please open this link to complete the liveness check:
+
+        🔗 https://kyc.binance.com/liveness?session=KYC-20260306-A1B2C3&token=xxx
+
+        This will open Binance's secure video verification page.
+        It takes about 30 seconds — just follow the on-screen instructions.
+
+        I'll wait here. Let me know when you're done, or I'll get notified automatically! ⏳"
+
+[User opens link in browser → Binance liveness page → face scan → done]
+
+[Webhook callback hits the agent: liveness_passed=true]
+
+Agent: "✅ Liveness check passed!
+
+        Your verification has been submitted.
+        📋 Reference: KYC-20260306-A1B2C3
+
+        ⏳ Processing usually takes 1-3 business days.
+        I'll notify you as soon as it's complete!"
+
+[Later, async webhook:]
+
+Agent: "🎉 Great news! Your Binance identity verification is approved!
+        You now have full access to Binance services."
 ```
 
 ## State Machine
 
-The KYC session state is tracked per user in `workspace/kyc-sessions/`. Each user gets a JSON file:
-
-```json
-{
-  "user_id": "telegram_user_id",
-  "state": "awaiting_consent",
-  "created_at": "2026-03-06T09:00:00Z",
-  "updated_at": "2026-03-06T09:05:00Z",
-  "personal_info": {
-    "full_name": null,
-    "date_of_birth": null,
-    "nationality": null,
-    "address": null
-  },
-  "document": {
-    "type": null,
-    "front_image": null,
-    "back_image": null
-  },
-  "selfie": {
-    "image": null
-  },
-  "verification": {
-    "status": "pending",
-    "submitted_at": null,
-    "result": null,
-    "rejection_reason": null
-  }
-}
+```
+awaiting_consent
+       ↓
+collecting_name → collecting_dob → collecting_nationality → collecting_address
+       ↓
+selecting_document → uploading_doc_front → [uploading_doc_back] → reviewing
+       ↓
+awaiting_liveness  ← USER OPENS BROWSER LINK
+       ↓ (webhook callback)
+submitted → approved / rejected
 ```
 
 ### States
 
-| State | Description | Expected Input |
-|-------|-------------|----------------|
-| `awaiting_consent` | Show T&C, wait for agreement | "agree" / "yes" |
-| `collecting_name` | Ask for full legal name | Text |
-| `collecting_dob` | Ask for date of birth | Date (YYYY-MM-DD) |
-| `collecting_nationality` | Ask for nationality | Text / country |
-| `collecting_address` | Ask for residential address | Text |
-| `selecting_document` | Choose document type | "passport" / "id" / "license" |
-| `uploading_doc_front` | Upload front of document | Image |
-| `uploading_doc_back` | Upload back of document | Image (skip for passport) |
-| `uploading_selfie` | Take selfie with ID | Image |
-| `reviewing` | Confirm all information | "confirm" / "edit" |
-| `submitted` | Verification in progress | — |
-| `approved` | KYC passed | — |
-| `rejected` | KYC failed, can retry | "retry" |
+| State | Input | Agent Action |
+|-------|-------|-------------|
+| `awaiting_consent` | "yes" / "no" | Explain process, get agreement |
+| `collecting_name` | text | Validate name (2-100 chars) |
+| `collecting_dob` | date | Validate 18+ age |
+| `collecting_nationality` | text | Match to supported countries |
+| `collecting_address` | text | Validate length (10-500 chars) |
+| `selecting_document` | "1"/"2"/"3" | Set document type |
+| `uploading_doc_front` | image | Save, validate quality |
+| `uploading_doc_back` | image | Save (skip for passport) |
+| `reviewing` | "confirm"/"edit" | Show summary, get confirmation |
+| `awaiting_liveness` | — (webhook) | Send liveness URL, wait for callback |
+| `submitted` | — (webhook) | Verification in progress |
+| `approved` | — | Notify user of success |
+| `rejected` | — | Notify user, offer retry |
 
-## Agent Behavior
+## Agent Behavior Guidelines
 
-When a user initiates KYC (says "start KYC", "verify my identity", "开始KYC", etc.):
+### Tone
+- Be helpful and efficient, not corporate
+- Match the user's language (auto-detect from their messages)
+- Don't repeat the full flow explanation at every step
+- Be concise: "What's your full name?" not "Please provide your full legal name as it appears on your government-issued identification document"
 
-### Step 1: Welcome
+### Error Handling
+- Invalid input → explain what's expected, ask again (don't restart)
+- Blurry photo → "That's a bit unclear. Try better lighting?"
+- Unsupported country → "Sorry, [country] isn't supported yet. Supported: ..."
+- User says "cancel" at any point → cancel and delete session data
+- Timeout (30 min inactivity) → "Still there? Your KYC session is still active."
+
+### Liveness Check
+- The liveness URL is a Binance-hosted page, NOT something we build
+- Send the URL as a clickable link in chat
+- The URL contains a session token — expires in 10 minutes
+- After user completes liveness, we receive a webhook callback
+- If no callback in 10 min, prompt user: "Did you complete the face scan? Here's the link again: ..."
+- Retry limit: 3 attempts for liveness
+
+### Multi-language
+- Detect language from user's first message
+- Supported: en, zh, ja, ko, es, pt, ru
+- All agent messages should be in the detected language
+- Don't switch languages mid-conversation unless user does
+
+## Session Storage
+
+Sessions are stored per user as JSON in the agent's workspace:
+
 ```
-👋 Welcome to Binance Identity Verification!
-
-To use Binance services, we need to verify your identity. This process takes about 5 minutes.
-
-You'll need:
-📄 A valid government-issued ID (passport, national ID, or driver's license)
-📸 A clear selfie
-📍 Your current residential address
-
-Your data is encrypted and handled per our Privacy Policy.
-
-Do you agree to proceed? (Yes / No)
-```
-
-### Step 2: Personal Information
-Collect each field one at a time in a natural conversation:
-- **Full legal name** (as shown on your ID)
-- **Date of birth** (validate format)
-- **Nationality** (validate against supported countries)
-- **Residential address** (street, city, postal code, country)
-
-### Step 3: Document Selection
-```
-Please select your ID document type:
-
-1️⃣ Passport
-2️⃣ National ID Card
-3️⃣ Driver's License
-```
-
-### Step 4: Document Upload
-- Request front photo (and back if National ID / Driver's License)
-- Validate image quality (not blurry, well-lit, all corners visible)
-- If quality is poor, ask to retake
-
-### Step 5: Selfie
-- Request a clear selfie
-- Optionally: ask user to hold their ID next to their face
-- Validate face is visible and matches document photo
-
-### Step 6: Review
-Show a summary of all collected info and ask for confirmation:
-```
-📋 Please review your information:
-
-👤 Name: John Doe
-📅 DOB: 1990-01-15
-🌍 Nationality: United States
-📍 Address: 123 Main St, New York, NY 10001
-
-📄 Document: Passport ✅
-📸 Selfie: Uploaded ✅
-
-Is everything correct? (Confirm / Edit)
+workspace/kyc-sessions/<user_id>.json
 ```
 
-### Step 7: Submit
+```json
+{
+  "session_id": "KYC-20260306-A1B2C3",
+  "user_id": "telegram_12345",
+  "state": "awaiting_liveness",
+  "language": "zh",
+  "created_at": "2026-03-06T09:00:00Z",
+  "updated_at": "2026-03-06T09:05:00Z",
+  "personal_info": {
+    "full_name": "Zhang San",
+    "date_of_birth": "1990-05-15",
+    "nationality": "China",
+    "address": "北京市朝阳区建国路88号, 100022"
+  },
+  "document": {
+    "type": "national_id",
+    "front_image": "uploads/doc_front_12345.jpg",
+    "back_image": "uploads/doc_back_12345.jpg"
+  },
+  "liveness": {
+    "url": "https://kyc.binance.com/liveness?session=...",
+    "status": "pending",
+    "attempts": 1,
+    "expires_at": "2026-03-06T09:15:00Z"
+  },
+  "verification": {
+    "status": "pending",
+    "submitted_at": null,
+    "result": null
+  }
+}
 ```
-✅ Your verification has been submitted!
 
-⏳ Processing usually takes 1-3 business days.
-We'll notify you as soon as your verification is complete.
+## API Integration
 
-Your reference ID: KYC-2026-XXXXX
+### Binance KYC API (production)
+
+The skill calls these Binance API endpoints:
+
 ```
+POST /sapi/v1/kyc/session          → Create KYC session, get session_id
+POST /sapi/v1/kyc/personal-info    → Submit personal info
+POST /sapi/v1/kyc/document/upload  → Upload ID document images
+POST /sapi/v1/kyc/liveness/create  → Get liveness check URL
+GET  /sapi/v1/kyc/liveness/status  → Poll liveness result
+POST /sapi/v1/kyc/submit           → Final submission
+GET  /sapi/v1/kyc/status/{id}      → Check verification result
+```
+
+### Webhook Callbacks
+
+The skill registers webhook endpoints for async notifications:
+
+```
+POST /webhook/kyc/liveness   → Liveness check completed
+POST /webhook/kyc/result     → Verification approved/rejected
+```
+
+When a webhook fires, the skill should:
+1. Load the user's session
+2. Update the state
+3. Send a proactive message to the user via their agent
+
+### Configuration
+
+The installing user's agent needs these env vars (or the skill prompts for them):
+
+```
+BINANCE_KYC_API_KEY=xxx          # Binance API key
+BINANCE_KYC_API_SECRET=xxx       # Binance API secret
+BINANCE_KYC_WEBHOOK_BASE=https://...  # Webhook callback URL
+```
+
+In **demo mode** (no API keys configured):
+- All API calls are simulated
+- Liveness URL points to a demo page
+- Auto-approves after 10 seconds
+- No real data leaves the agent
 
 ## Validation Rules
 
-| Field | Validation |
-|-------|-----------|
-| Name | 2-100 chars, letters/spaces/hyphens only |
-| DOB | Valid date, user must be 18+ |
+| Field | Rule |
+|-------|------|
+| Name | 2-100 chars, not all symbols |
+| DOB | Valid date, age ≥ 18 |
 | Nationality | Must be in supported countries list |
-| Address | Non-empty, reasonable length |
-| Images | JPG/PNG, 100KB-10MB, min 640x480 resolution |
+| Address | 10-500 chars |
+| Document images | JPG/PNG, 100KB-10MB |
+| Liveness | Max 3 attempts, URL expires in 10 min |
 
-## Supported Countries (Demo)
+## Supported Countries
 
-For the demo, support these tier-1 markets:
-- United States, United Kingdom, Canada, Australia
-- Japan, South Korea, Singapore, Hong Kong
-- Germany, France, Netherlands, Switzerland
-- Brazil, Mexico, Argentina
-- India, Indonesia, Philippines, Vietnam
-- UAE, Saudi Arabia, Turkey
-- Russia, Ukraine
-
-## Error Handling
-
-- **Invalid input** → Explain what's expected, ask again
-- **Image too blurry** → "The image appears unclear. Please retake in good lighting."
-- **Unsupported country** → "Sorry, verification is not available in your region yet."
-- **Session timeout** (30 min no activity) → "Your session expired. Type /start_kyc to begin again."
-- **User wants to cancel** → "KYC cancelled. Your data has been deleted. Type /start_kyc to try again."
-
-## Multi-language Support
-
-Detect user's language from their messages and respond accordingly. Support at minimum:
-- English (en)
-- Chinese Simplified (zh-CN)
-- Japanese (ja)
-- Korean (ko)
-- Spanish (es)
-- Portuguese (pt)
-- Russian (ru)
-
-## API Integration Points (Production)
-
-In production, these would connect to real Binance APIs:
-
-```
-POST /api/v1/kyc/session/create     → Create KYC session
-POST /api/v1/kyc/personal-info      → Submit personal info
-POST /api/v1/kyc/document/upload    → Upload ID document
-POST /api/v1/kyc/selfie/upload      → Upload selfie
-POST /api/v1/kyc/submit             → Submit for review
-GET  /api/v1/kyc/status/{id}        → Check verification status
-```
-
-## Demo Mode
-
-This skill runs in **demo mode** by default:
-- No actual API calls to Binance backend
-- Document "verification" is simulated (always approves after 10s delay)
-- Images are saved locally but not sent anywhere
-- All user data stays in the sandbox
-
-To switch to production mode, set environment variable:
-```
-BINANCE_KYC_MODE=production
-BINANCE_KYC_API_KEY=xxx
-BINANCE_KYC_API_SECRET=xxx
-```
+Argentina, Australia, Brazil, Canada, China, France, Germany, Hong Kong,
+India, Indonesia, Japan, Mexico, Netherlands, Philippines, Russia,
+Saudi Arabia, Singapore, South Korea, Switzerland, Turkey, UAE, Ukraine,
+United Kingdom, United States, Vietnam
 
 ## File Structure
 
 ```
 skills/binance-kyc/
-├── SKILL.md              # This file
-├── kyc_flow.py           # Main flow controller
-├── validators.py         # Input validation
-├── messages/             # Message templates (multi-language)
-│   ├── en.json
-│   ├── zh.json
-│   └── ...
-└── README.md             # Developer documentation
+├── SKILL.md                     # This file (agent instructions)
+├── src/binance_kyc/             # Core Python package
+│   ├── models/                  # Pydantic data models
+│   ├── services/                # State machine, validators, API client
+│   ├── handlers/                # Telegram handler (optional)
+│   └── messages/                # Multi-language templates (en.json, zh.json)
+├── demo_server/                 # Interactive web demo
+├── static/                      # Demo frontend
+├── tests/                       # 76+ unit tests
+├── scripts/
+│   ├── demo.sh                  # Start web demo
+│   └── start.sh                 # Start Telegram bot (standalone mode)
+└── pyproject.toml               # Python project config
 ```

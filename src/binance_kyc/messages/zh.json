@@ -7,7 +7,6 @@
   "selecting_document": "请选择您的证件类型：\n\n1️⃣ 护照\n2️⃣ 身份证\n3️⃣ 驾驶证\n\n请回复数字或证件名称。",
   "uploading_doc_front": "📄 请发送您 **{document_type}** **正面** 的清晰照片。\n\n拍照提示：\n✅ 放在平整的深色桌面上\n✅ 确保光线充足\n✅ 四个角都要可见\n✅ 避免反光和模糊",
   "uploading_doc_back": "现在请发送您证件 **背面** 的清晰照片。",
-  "uploading_selfie": "📸 快完成了！请发送一张 **自拍照**。\n\n提示：\n✅ 正对镜头\n✅ 光线充足，无阴影\n✅ 不要戴墨镜或口罩\n✅ 与证件照片一致",
   "review_header": "📋 **请确认您的信息：**",
   "review_body": "👤 姓名：{full_name}\n📅 出生日期：{date_of_birth}\n🌍 国籍：{nationality}\n📍 地址：{address}\n\n📄 证件：{document_type}\n   正面：✅ 已上传{back_status}\n📸 自拍：✅ 已上传",
   "review_confirm": "\n信息是否正确？回复 **确认** 提交，或回复 **修改** 重新填写。",
@@ -24,5 +23,9 @@
     "passport": "护照",
     "national_id": "身份证",
     "drivers_license": "驾驶证"
-  }
+  },
+  "awaiting_liveness": "快完成了！为了安全，需要进行人脸验证。\n\n🔗 请打开此链接：\n{liveness_url}\n\n大约需要30秒，按照页面提示操作即可。\n我会在这里等你，完成后会自动收到通知！⏳",
+  "liveness_passed": "✅ 人脸验证通过！",
+  "liveness_failed": "❌ 人脸验证未通过。{reason}\n您还有 {remaining} 次机会。请重试：\n🔗 {liveness_url}",
+  "liveness_expired": "⏰ 验证链接已过期。\n这是新的链接：\n🔗 {liveness_url}"
 }

@@ -7,7 +7,6 @@
   "selecting_document": "Please select your ID document type:\n\n1️⃣ Passport\n2️⃣ National ID Card\n3️⃣ Driver's License\n\nReply with the number or name.",
   "uploading_doc_front": "📄 Please send a clear photo of the **front** of your {document_type}.\n\nTips:\n✅ Place on a flat, dark surface\n✅ Good lighting, no shadows\n✅ All 4 corners visible\n✅ No glare or blur",
   "uploading_doc_back": "Now please send a clear photo of the **back** of your document.",
-  "uploading_selfie": "📸 Almost done! Please send a **selfie** of yourself.\n\nTips:\n✅ Face the camera directly\n✅ Good lighting, no shadows\n✅ No sunglasses or masks\n✅ Should match your ID photo",
   "review_header": "📋 **Please review your information:**",
   "review_body": "👤 Name: {full_name}\n📅 DOB: {date_of_birth}\n🌍 Nationality: {nationality}\n📍 Address: {address}\n\n📄 Document: {document_type}\n   Front: ✅ Uploaded{back_status}\n📸 Selfie: ✅ Uploaded",
   "review_confirm": "\nIs everything correct? Reply **Confirm** to submit, or **Edit** to start over.",
@@ -24,5 +23,9 @@
     "passport": "Passport",
     "national_id": "National ID Card",
     "drivers_license": "Driver's License"
-  }
+  },
+  "awaiting_liveness": "Almost done! For security, we need a quick face verification.\n\n🔗 Please open this link:\n{liveness_url}\n\nIt takes about 30 seconds — just follow the on-screen instructions.\nI'll wait here and get notified automatically when you're done! ⏳",
+  "liveness_passed": "✅ Face verification passed!",
+  "liveness_failed": "❌ Face verification didn't pass. {reason}\nYou have {remaining} attempts left. Try again:\n🔗 {liveness_url}",
+  "liveness_expired": "⏰ The verification link has expired.\nHere's a fresh link:\n🔗 {liveness_url}"
 }

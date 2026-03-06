@@ -6,7 +6,11 @@ from enum import StrEnum
 
 
 class KYCState(StrEnum):
-    """All possible states in the KYC verification flow."""
+    """All possible states in the KYC verification flow.
+
+    Flow: consent → personal info → document upload → review
+          → liveness (browser redirect) → submitted → approved/rejected
+    """
 
     AWAITING_CONSENT = "awaiting_consent"
     COLLECTING_NAME = "collecting_name"
@@ -16,8 +20,8 @@ class KYCState(StrEnum):
     SELECTING_DOCUMENT = "selecting_document"
     UPLOADING_DOC_FRONT = "uploading_doc_front"
     UPLOADING_DOC_BACK = "uploading_doc_back"
-    UPLOADING_SELFIE = "uploading_selfie"
     REVIEWING = "reviewing"
+    AWAITING_LIVENESS = "awaiting_liveness"
     SUBMITTED = "submitted"
     APPROVED = "approved"
     REJECTED = "rejected"
@@ -39,6 +43,15 @@ class VerificationStatus(StrEnum):
     PROCESSING = "processing"
     APPROVED = "approved"
     REJECTED = "rejected"
+
+
+class LivenessStatus(StrEnum):
+    """Liveness check status."""
+
+    PENDING = "pending"
+    PASSED = "passed"
+    FAILED = "failed"
+    EXPIRED = "expired"
 
 
 # Document types that only need a front photo

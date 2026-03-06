@@ -21,9 +21,11 @@ from binance_kyc.models.enums import (
     DOUBLE_SIDE_DOCUMENTS,
     DocumentType,
     KYCState,
+    LivenessStatus,
     VerificationStatus,
 )
 from binance_kyc.models.session import Session
+from binance_kyc.models.enums import LivenessStatus
 from binance_kyc.services.state_machine import advance, can_retry, next_state, reset_for_retry
 from binance_kyc.services.validators import (
     validate_address,
@@ -74,9 +76,9 @@ STATE_PROGRESS = {
     KYCState.COLLECTING_ADDRESS: 0.4,
     KYCState.SELECTING_DOCUMENT: 0.5,
     KYCState.UPLOADING_DOC_FRONT: 0.6,
-    KYCState.UPLOADING_DOC_BACK: 0.7,
-    KYCState.UPLOADING_SELFIE: 0.8,
-    KYCState.REVIEWING: 0.9,
+    KYCState.UPLOADING_DOC_BACK: 0.65,
+    KYCState.REVIEWING: 0.75,
+    KYCState.AWAITING_LIVENESS: 0.85,
     KYCState.SUBMITTED: 0.95,
     KYCState.APPROVED: 1.0,
     KYCState.REJECTED: 1.0,
@@ -232,7 +234,7 @@ async def chat(req: ChatRequest):
         advance(session)
         if session.state == KYCState.UPLOADING_DOC_BACK:
             return _make_response(session, [get("uploading_doc_back", lang=lang)])
-        return _make_response(session, [get("uploading_selfie", lang=lang)])
+        return _make_response(session, [get("awaiting_liveness", lang=lang)])
 
     # ── UPLOADING_DOC_BACK ──
     if state == KYCState.UPLOADING_DOC_BACK:
@@ -240,13 +242,12 @@ async def chat(req: ChatRequest):
             return _make_response(session, ["📷 Please send a photo of the back of your document." if lang == "en" else "📷 请发送您证件背面的照片。"])
         session.document.back_image_path = "demo_back.jpg"
         advance(session)
-        return _make_response(session, [get("uploading_selfie", lang=lang)])
+        return _make_response(session, [get("awaiting_liveness", lang=lang)])
 
-    # ── UPLOADING_SELFIE ──
-    if state == KYCState.UPLOADING_SELFIE:
+    # ── AWAITING_LIVENESS ──
+    if state == KYCState.AWAITING_LIVENESS:
         if not req.image:
             return _make_response(session, ["📷 Please send a selfie." if lang == "en" else "📷 请发送一张自拍照。"])
-        session.selfie.image_path = "demo_selfie.jpg"
         advance(session)
         return _make_response(session, [_build_review(session, lang)])
 
@@ -256,15 +257,17 @@ async def chat(req: ChatRequest):
         edit = {"edit", "modify", "change", "修改", "编辑", "重新"}
         lower = text.lower()
         if lower in confirm:
-            session.verification.status = VerificationStatus.PROCESSING
-            advance(session)
-            msgs = [get("submitted", lang=lang, session_id=session.session_id)]
-            # Auto-approve for demo
-            await asyncio.sleep(0.5)
-            session.verification.status = VerificationStatus.APPROVED
-            session.advance_to(KYCState.APPROVED)
-            msgs.append(get("approved", lang=lang))
-            return _make_response(session, msgs)
+            advance(session)  # → AWAITING_LIVENESS
+            liveness_msg = ("Almost done! For security, we need a quick face verification.\n\n"
+                           "🔗 Please open this link:\n"
+                           f"https://kyc-demo.binance.com/liveness?session={session.session_id}\n\n"
+                           "It takes about 30 seconds. Type \"done\" when finished! ⏳"
+                           if session.language == "en" else
+                           "快完成了！为了安全，需要进行人脸验证。\n\n"
+                           f"🔗 请打开此链接：\n"
+                           f"https://kyc-demo.binance.com/liveness?session={session.session_id}\n\n"
+                           "大约需要30秒。完成后请回复 \"完成\"！⏳")
+            return _make_response(session, [liveness_msg])
         elif lower in edit:
             reset_for_retry(session)
             session.state = KYCState.AWAITING_CONSENT

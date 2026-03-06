@@ -27,6 +27,12 @@ class TestSession:
         s.document.doc_type = DocumentType.PASSPORT
         assert s.needs_doc_back is False
 
+    def test_liveness_defaults(self):
+        s = Session(user_id="u1")
+        assert s.liveness.status == "pending"
+        assert s.liveness.attempts == 0
+        assert s.liveness.can_retry is True
+
     def test_advance_to(self):
         s = Session(user_id="u1")
         old = s.updated_at

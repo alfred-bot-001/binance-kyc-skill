@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from binance_kyc.models.enums import DocumentType, KYCState, VerificationStatus
+from binance_kyc.models.enums import DocumentType, KYCState, LivenessStatus, VerificationStatus
 from binance_kyc.models.session import Session
 from binance_kyc.services.state_machine import advance, can_retry, next_state, reset_for_retry
 
@@ -31,8 +31,8 @@ class TestNextState:
             KYCState.SELECTING_DOCUMENT,
             KYCState.UPLOADING_DOC_FRONT,
             KYCState.UPLOADING_DOC_BACK,
-            KYCState.UPLOADING_SELFIE,
             KYCState.REVIEWING,
+            KYCState.AWAITING_LIVENESS,
             KYCState.SUBMITTED,
         ]
 
@@ -45,7 +45,7 @@ class TestNextState:
         """Passport should skip the doc-back state."""
         s = Session(user_id="u1", state=KYCState.UPLOADING_DOC_FRONT)
         s.document.doc_type = DocumentType.PASSPORT
-        assert next_state(s) == KYCState.UPLOADING_SELFIE
+        assert next_state(s) == KYCState.REVIEWING
 
     def test_national_id_needs_back(self):
         s = Session(user_id="u1", state=KYCState.UPLOADING_DOC_FRONT)
@@ -99,10 +99,13 @@ class TestRetry:
         s = Session(user_id="u1", state=KYCState.REJECTED)
         s.personal_info.full_name = "Test"
         s.document.doc_type = DocumentType.PASSPORT
+        s.liveness.attempts = 2
         reset_for_retry(s)
         assert s.state == KYCState.AWAITING_CONSENT
         assert s.personal_info.full_name is None
         assert s.document.doc_type is None
+        assert s.liveness.attempts == 0
+        assert s.liveness.status == LivenessStatus.PENDING
 
     def test_reset_raises_if_not_retryable(self):
         s = Session(user_id="u1", state=KYCState.COLLECTING_NAME)

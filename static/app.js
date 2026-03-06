@@ -36,6 +36,9 @@ const quickActions = {
     { label: '✅ Confirm', value: 'confirm' },
     { label: '✏️ Edit', value: 'edit' },
   ],
+  'awaiting_liveness': [
+    { label: '✅ Done — face scan complete', value: 'done' },
+  ],
 };
 
 async function api(url, data = {}) {
@@ -74,7 +77,7 @@ function updateProgress(progress, state) {
     'selecting_document': 'Document selection',
     'uploading_doc_front': 'Document upload',
     'uploading_doc_back': 'Document upload (back)',
-    'uploading_selfie': 'Selfie',
+    'awaiting_liveness': 'Liveness Check',
     'reviewing': 'Review & confirm',
     'submitted': 'Processing...',
     'approved': 'Verified ✅',
@@ -158,7 +161,7 @@ async function handleResponse(resp) {
   updateCollectedData(resp.personal_info, resp.document_type);
 
   // Show appropriate quick actions
-  if (['uploading_doc_front', 'uploading_doc_back', 'uploading_selfie'].includes(resp.state)) {
+  if (['uploading_doc_front', 'uploading_doc_back'].includes(resp.state)) {
     showPhotoQuickAction();
   } else {
     showQuickActions(resp.state);
@@ -223,8 +226,8 @@ async function startChat() {
 function onLangChange(lang) {
   // Update flow diagram labels based on language
   const flowLabels = {
-    en: ['Consent', 'Name', 'DOB', 'Country', 'Address', 'Doc', '📄', '📸', 'Review', '✅'],
-    zh: ['同意', '姓名', '生日', '国籍', '地址', '证件', '📄', '📸', '确认', '✅'],
+    en: ['Consent', 'Name', 'DOB', 'Country', 'Address', 'Doc', '📄', '🔗', 'Review', '✅'],
+    zh: ['同意', '姓名', '生日', '国籍', '地址', '证件', '📄', '🔗', '确认', '✅'],
   };
   const steps = document.querySelectorAll('.flow-step');
   const labels = flowLabels[lang] || flowLabels['en'];

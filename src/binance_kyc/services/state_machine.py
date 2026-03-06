@@ -8,13 +8,14 @@ from binance_kyc.models.enums import (
     SINGLE_SIDE_DOCUMENTS,
     DocumentType,
     KYCState,
+    LivenessStatus,
     VerificationStatus,
 )
 from binance_kyc.models.session import Session
 
 logger = structlog.get_logger()
 
-# Ordered linear flow (doc-back is conditionally skipped)
+# Ordered linear flow (doc-back and liveness are conditionally handled)
 _TRANSITIONS: dict[KYCState, KYCState] = {
     KYCState.AWAITING_CONSENT: KYCState.COLLECTING_NAME,
     KYCState.COLLECTING_NAME: KYCState.COLLECTING_DOB,
@@ -23,9 +24,10 @@ _TRANSITIONS: dict[KYCState, KYCState] = {
     KYCState.COLLECTING_ADDRESS: KYCState.SELECTING_DOCUMENT,
     KYCState.SELECTING_DOCUMENT: KYCState.UPLOADING_DOC_FRONT,
     # UPLOADING_DOC_FRONT → handled dynamically (skip back for passport)
-    KYCState.UPLOADING_DOC_BACK: KYCState.UPLOADING_SELFIE,
-    KYCState.UPLOADING_SELFIE: KYCState.REVIEWING,
-    KYCState.REVIEWING: KYCState.SUBMITTED,
+    KYCState.UPLOADING_DOC_BACK: KYCState.REVIEWING,
+    KYCState.REVIEWING: KYCState.AWAITING_LIVENESS,
+    KYCState.AWAITING_LIVENESS: KYCState.SUBMITTED,
+    KYCState.SUBMITTED: KYCState.APPROVED,  # or REJECTED via webhook
 }
 
 
@@ -39,7 +41,7 @@ def next_state(session: Session) -> KYCState | None:
     # Special case: after front upload, skip back for single-side docs
     if current == KYCState.UPLOADING_DOC_FRONT:
         if session.document.doc_type in SINGLE_SIDE_DOCUMENTS:
-            return KYCState.UPLOADING_SELFIE
+            return KYCState.REVIEWING
         return KYCState.UPLOADING_DOC_BACK
 
     return _TRANSITIONS.get(current)
@@ -85,7 +87,10 @@ def reset_for_retry(session: Session) -> None:
     session.document.doc_type = None
     session.document.front_image_path = None
     session.document.back_image_path = None
-    session.selfie.image_path = None
+    session.liveness.url = None
+    session.liveness.status = LivenessStatus.PENDING
+    session.liveness.attempts = 0
+    session.liveness.expires_at = None
     session.verification.status = VerificationStatus.PENDING
     session.verification.submitted_at = None
     session.verification.result = None
