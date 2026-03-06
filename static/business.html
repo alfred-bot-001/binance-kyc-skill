@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Binance KYC — Business Analysis</title>
+  <link rel="stylesheet" href="/static/style.css">
+  <script src="/static/i18n.js"></script>
+</head>
+<body>
+
+<div class="header">
+  <div>
+    <h1 data-i18n="header.title">🔐 Binance KYC — Chat Verification</h1>
+    <div class="subtitle" data-i18n="header.subtitle">Complete identity verification without leaving the chat</div>
+  </div>
+  <div style="display:flex; flex-direction:column; align-items:flex-end; gap:10px;">
+    <div class="page-nav">
+      <a href="/" data-i18n="nav.demo">💬 Chat Demo</a>
+      <a href="/business.html" class="active" data-i18n="nav.business">💼 Business</a>
+      <button class="lang-toggle" onclick="toggleLang()">中文</button>
+    </div>
+  </div>
+</div>
+
+<div class="container">
+
+  <!-- Market Opportunity -->
+  <div class="panel">
+    <h2 data-i18n="biz.market.title">📊 Market Opportunity</h2>
+    <div class="metrics-grid" id="metrics-grid">
+      <div class="metric-card"><div class="metric-value">$13.7B</div><div class="metric-label">Global KYC Market (2024)</div></div>
+      <div class="metric-card"><div class="metric-value">$21.8B</div><div class="metric-label">Projected (2030)</div></div>
+      <div class="metric-card"><div class="metric-value">8.1%</div><div class="metric-label">CAGR</div></div>
+      <div class="metric-card"><div class="metric-value">200M+</div><div class="metric-label">Binance Users</div></div>
+      <div class="metric-card"><div class="metric-value">~50K</div><div class="metric-label">New KYC / Day</div></div>
+      <div class="metric-card"><div class="metric-value">$18.6B</div><div class="metric-label">Digital ID Market (2028)</div></div>
+    </div>
+  </div>
+
+  <!-- Business Scenarios -->
+  <div class="panel">
+    <h2 data-i18n="biz.scenarios.title">💡 Business Scenarios</h2>
+    <div class="scenarios-grid" id="scenarios-grid">
+      <!-- Filled by JS -->
+    </div>
+  </div>
+
+  <!-- Competitive Analysis -->
+  <div class="panel">
+    <h2 data-i18n="biz.compare.title">⚔️ Competitive Analysis</h2>
+    <table class="compare-table" id="compare-table">
+      <thead>
+        <tr>
+          <th>Feature</th>
+          <th>Jumio</th>
+          <th>Onfido</th>
+          <th>Sumsub</th>
+          <th style="background:var(--accent);color:var(--bg);">Binance Chat KYC</th>
+        </tr>
+      </thead>
+      <tbody id="compare-body">
+        <!-- Filled by JS -->
+      </tbody>
+    </table>
+  </div>
+
+  <!-- ROI Calculator -->
+  <div class="panel">
+    <h2 data-i18n="biz.calc.title">🧮 ROI Calculator</h2>
+    <div class="calc-grid">
+      <div>
+        <div class="calc-input-group">
+          <label>Daily Verifications: <span class="calc-value" id="calc-daily-val">50,000</span></label>
+          <input type="range" id="calc-daily" min="1000" max="200000" step="1000" value="50000" oninput="updateCalc()">
+        </div>
+        <div class="calc-input-group" style="margin-top:16px;">
+          <label>Traditional Cost/Verification: <span class="calc-value" id="calc-trad-val">$3.00</span></label>
+          <input type="range" id="calc-trad" min="0.5" max="10" step="0.25" value="3" oninput="updateCalc()">
+        </div>
+        <div class="calc-input-group" style="margin-top:16px;">
+          <label>Chat KYC Cost/Verification: <span class="calc-value" id="calc-chat-val">$0.75</span></label>
+          <input type="range" id="calc-chat" min="0.1" max="3" step="0.05" value="0.75" oninput="updateCalc()">
+        </div>
+        <div class="calc-input-group" style="margin-top:16px;">
+          <label>Completion Rate Boost: <span class="calc-value" id="calc-boost-val">20%</span></label>
+          <input type="range" id="calc-boost" min="5" max="50" step="1" value="20" oninput="updateCalc()">
+        </div>
+      </div>
+      <div class="calc-results" id="calc-results">
+        <h3 style="color:var(--accent);margin-bottom:12px;">💰 Projected Savings</h3>
+        <div class="result-row"><span>Daily Savings</span><span class="value" id="res-daily">—</span></div>
+        <div class="result-row"><span>Monthly Savings</span><span class="value" id="res-monthly">—</span></div>
+        <div class="result-row"><span>Yearly Savings</span><span class="value" id="res-yearly">—</span></div>
+        <div class="result-row"><span>Extra Users/Year</span><span class="value" id="res-users">—</span></div>
+        <div class="result-row"><span>Cost Reduction</span><span class="value" id="res-roi">—</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Risk Assessment -->
+  <div class="panel">
+    <h2 data-i18n="biz.risk.title">⚠️ Risk Assessment</h2>
+    <table class="risk-table" id="risk-table">
+      <thead>
+        <tr><th>Risk</th><th>Probability</th><th>Impact</th><th>Mitigation</th></tr>
+      </thead>
+      <tbody id="risk-body">
+        <!-- Filled by JS -->
+      </tbody>
+    </table>
+  </div>
+
+</div>
+
+<script>
+async function loadMetrics() {
+  const res = await fetch('/api/business/metrics');
+  const data = await res.json();
+
+  // Scenarios
+  const grid = document.getElementById('scenarios-grid');
+  grid.innerHTML = '';
+  data.scenarios.forEach(s => {
+    const isZh = currentLang === 'zh';
+    grid.innerHTML += `
+      <div class="scenario-card">
+        <div class="icon">${s.icon}</div>
+        <h4>${isZh ? s.titleZh : s.title}</h4>
+        <p>${isZh ? s.descZh : s.desc}</p>
+        <div class="revenue">${isZh ? s.revenueZh : s.revenue}</div>
+      </div>`;
+  });
+
+  // Competitor table
+  const tbody = document.getElementById('compare-body');
+  tbody.innerHTML = '';
+  const features = [
+    { label: 'Type', key: 'type' },
+    { label: 'Chat-Based', key: 'chatBased', format: v => v ? '<span class="tag-yes">✅ YES</span>' : '<span class="tag-no">❌ No</span>' },
+    { label: 'Languages', key: 'languages' },
+    { label: 'Avg Time', key: 'avgTime' },
+    { label: 'Pricing', key: 'pricing' },
+    { label: 'Strength', key: 'strength' },
+    { label: 'Weakness', key: 'weakness' },
+  ];
+  features.forEach(f => {
+    let row = `<tr><td style="font-weight:600;">${f.label}</td>`;
+    data.competitors.forEach((c, i) => {
+      let val = c[f.key];
+      if (f.format) val = f.format(val);
+      const isUs = i === data.competitors.length - 1;
+      row += `<td${isUs ? ' style="background:rgba(240,185,11,0.08);"' : ''}>${val}</td>`;
+    });
+    row += '</tr>';
+    tbody.innerHTML += row;
+  });
+
+  // Risk table
+  const riskBody = document.getElementById('risk-body');
+  riskBody.innerHTML = '';
+  data.risks.forEach(r => {
+    const isZh = currentLang === 'zh';
+    const pClass = r.probability === 'High' ? 'risk-high' : r.probability === 'Medium' ? 'risk-medium' : 'risk-low';
+    const iClass = r.impact === 'High' ? 'risk-high' : r.impact === 'Medium' ? 'risk-medium' : 'risk-low';
+    riskBody.innerHTML += `
+      <tr>
+        <td style="font-weight:600;">${isZh ? r.riskZh : r.risk}</td>
+        <td class="${pClass}">${r.probability}</td>
+        <td class="${iClass}">${r.impact}</td>
+        <td style="font-size:0.85em;color:var(--text2);">${r.mitigation}</td>
+      </tr>`;
+  });
+}
+
+function updateCalc() {
+  const daily = parseInt(document.getElementById('calc-daily').value);
+  const trad = parseFloat(document.getElementById('calc-trad').value);
+  const chat = parseFloat(document.getElementById('calc-chat').value);
+  const boost = parseFloat(document.getElementById('calc-boost').value);
+
+  document.getElementById('calc-daily-val').textContent = daily.toLocaleString();
+  document.getElementById('calc-trad-val').textContent = `$${trad.toFixed(2)}`;
+  document.getElementById('calc-chat-val').textContent = `$${chat.toFixed(2)}`;
+  document.getElementById('calc-boost-val').textContent = `${boost}%`;
+
+  const dailySave = daily * (trad - chat);
+  const monthlySave = dailySave * 30;
+  const yearlySave = dailySave * 365;
+  const extraUsers = daily * (boost / 100) * 365;
+  const roi = ((trad - chat) / trad * 100).toFixed(0);
+
+  document.getElementById('res-daily').textContent = `$${dailySave.toLocaleString('en', {maximumFractionDigits: 0})}`;
+  document.getElementById('res-monthly').textContent = `$${monthlySave.toLocaleString('en', {maximumFractionDigits: 0})}`;
+  document.getElementById('res-yearly').textContent = `$${yearlySave.toLocaleString('en', {maximumFractionDigits: 0})}`;
+  document.getElementById('res-users').textContent = `+${extraUsers.toLocaleString('en', {maximumFractionDigits: 0})}`;
+  document.getElementById('res-roi').textContent = `${roi}%`;
+}
+
+function onLangChange() {
+  loadMetrics();
+}
+
+window.addEventListener('DOMContentLoaded', () => {
+  loadMetrics();
+  updateCalc();
+});
+</script>
+</body>
+</html>

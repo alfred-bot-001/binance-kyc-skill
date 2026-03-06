@@ -21,6 +21,25 @@
 - **Persistent Sessions** — per-user state saved as JSON, survives restarts
 - **Docker Ready** — one-command deployment with Docker Compose
 
+## 🌐 Interactive Web Demo
+
+Try the full KYC flow in your browser — no Telegram required:
+
+```bash
+./scripts/demo.sh
+```
+
+Open:
+- **http://localhost:8099** — 💬 Chat Demo (simulated Telegram conversation)
+- **http://localhost:8099/business** — 💼 Business Analysis (market data, ROI calculator, competitive analysis)
+
+The demo includes:
+- Real-time chat interface mimicking Telegram
+- Step-by-step progress tracking
+- Side-by-side comparison with traditional KYC
+- Interactive ROI calculator
+- Full competitive analysis (Jumio, Onfido, Sumsub)
+
 ## 📋 Architecture
 
 ```
@@ -41,7 +60,7 @@ User (Telegram) ←→ python-telegram-bot ←→ State Machine ←→ Session S
 
 ```
 binance-kyc-skill/
-├── src/binance_kyc/
+├── src/binance_kyc/             # Core package
 │   ├── __init__.py              # Package metadata
 │   ├── cli.py                   # CLI entry point
 │   ├── config.py                # Settings (env vars + .env)
@@ -60,9 +79,18 @@ binance-kyc-skill/
 │   │   └── zh.json              # Chinese templates
 │   └── utils/
 │       └── logging.py           # Structured logging (structlog)
-├── tests/                       # pytest test suite
+├── demo_server/                 # Interactive web demo
+│   └── app.py                   # FastAPI demo server
+├── static/                      # Web demo frontend
+│   ├── index.html               # Chat demo page
+│   ├── business.html            # Business analysis page
+│   ├── style.css                # Dark theme UI
+│   ├── app.js                   # Chat demo logic
+│   └── i18n.js                  # EN/ZH language toggle
+├── tests/                       # pytest test suite (76 tests)
 ├── scripts/
-│   ├── start.sh                 # One-click start script
+│   ├── start.sh                 # One-click Telegram bot start
+│   ├── demo.sh                  # One-click web demo start
 │   └── lint.sh                  # Lint + type-check + test
 ├── pyproject.toml               # PEP 621 project config
 ├── Dockerfile                   # Container image

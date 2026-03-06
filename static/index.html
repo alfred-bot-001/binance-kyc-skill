@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Binance KYC — Chat Demo</title>
+  <link rel="stylesheet" href="/static/style.css">
+  <script src="/static/i18n.js"></script>
+</head>
+<body>
+
+<div class="header">
+  <div>
+    <h1 data-i18n="header.title">🔐 Binance KYC — Chat Verification</h1>
+    <div class="subtitle" data-i18n="header.subtitle">Complete identity verification without leaving the chat</div>
+  </div>
+  <div style="display:flex; flex-direction:column; align-items:flex-end; gap:10px;">
+    <div class="page-nav">
+      <a href="/" class="active" data-i18n="nav.demo">💬 Chat Demo</a>
+      <a href="/business.html" data-i18n="nav.business">💼 Business</a>
+      <button class="lang-toggle" onclick="toggleLang()">中文</button>
+    </div>
+  </div>
+</div>
+
+<div class="container">
+  <div class="split">
+    <!-- Left: Chat Interface -->
+    <div>
+      <div class="chat-container">
+        <div class="chat-header">
+          <div class="chat-avatar">🔐</div>
+          <div class="chat-info">
+            <h4 data-i18n="chat.title">Binance KYC Bot</h4>
+            <span><span class="dot on"></span> <span data-i18n="chat.online">Online</span></span>
+          </div>
+          <div style="margin-left:auto;">
+            <button onclick="resetChat()" style="background:var(--bg3);color:var(--text2);border:1px solid var(--border);border-radius:6px;padding:4px 10px;cursor:pointer;font-size:0.8em;">🔄 Reset</button>
+          </div>
+        </div>
+
+        <div class="progress-container">
+          <div class="progress-bar">
+            <div class="progress-fill" id="progress-fill"></div>
+          </div>
+          <div class="progress-label" id="progress-label">0% — Getting started</div>
+        </div>
+
+        <div class="chat-messages" id="chat-messages">
+          <!-- Messages appear here -->
+        </div>
+
+        <div class="quick-actions" id="quick-actions"></div>
+
+        <div class="chat-input-area">
+          <button class="btn-photo" onclick="sendPhoto()" title="Send photo">📷</button>
+          <input type="text" id="chat-input" data-i18n-placeholder="chat.placeholder" placeholder="Type a message..." onkeydown="if(event.key==='Enter')sendMessage()">
+          <button onclick="sendMessage()">→</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right: Info Panel -->
+    <div class="info-panel">
+      <!-- Flow Diagram -->
+      <div class="info-card">
+        <h3 data-i18n="info.flow">📋 Verification Flow</h3>
+        <div class="flow-diagram" id="flow-diagram">
+          <div class="flow-step active" data-step="awaiting_consent">Consent</div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-step" data-step="collecting_name">Name</div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-step" data-step="collecting_dob">DOB</div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-step" data-step="collecting_nationality">Country</div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-step" data-step="collecting_address">Address</div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-step" data-step="selecting_document">Doc</div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-step" data-step="uploading_doc_front">📄</div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-step" data-step="uploading_selfie">📸</div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-step" data-step="reviewing">Review</div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-step" data-step="approved">✅</div>
+        </div>
+      </div>
+
+      <!-- Collected Data -->
+      <div class="info-card">
+        <h3 data-i18n="info.collected">📝 Collected Data</h3>
+        <div class="stat-row"><span class="label" data-i18n="info.name">Full Name</span><span class="value" id="data-name">—</span></div>
+        <div class="stat-row"><span class="label" data-i18n="info.dob">Date of Birth</span><span class="value" id="data-dob">—</span></div>
+        <div class="stat-row"><span class="label" data-i18n="info.nationality">Nationality</span><span class="value" id="data-nationality">—</span></div>
+        <div class="stat-row"><span class="label" data-i18n="info.address">Address</span><span class="value" id="data-address">—</span></div>
+        <div class="stat-row"><span class="label" data-i18n="info.document">Document</span><span class="value" id="data-doc">—</span></div>
+      </div>
+
+      <!-- Comparison -->
+      <div class="info-card">
+        <h3 data-i18n="info.comparison">⚡ vs Traditional KYC</h3>
+        <div class="stat-row"><span class="label">Completion Time</span><span class="value highlight">3-5 min</span></div>
+        <div class="stat-row"><span class="label">Traditional Time</span><span class="value warn">8-15 min</span></div>
+        <div class="stat-row"><span class="label">App Switches</span><span class="value highlight">0</span></div>
+        <div class="stat-row"><span class="label">Traditional Redirects</span><span class="value warn">3-5</span></div>
+        <div class="stat-row"><span class="label">Drop-off Rate</span><span class="value highlight">~12%</span></div>
+        <div class="stat-row"><span class="label">Traditional Drop-off</span><span class="value warn">~35%</span></div>
+        <div class="stat-row"><span class="label">Frontend Required</span><span class="value highlight">None</span></div>
+        <div class="stat-row"><span class="label">Traditional Frontend</span><span class="value warn">SDK/WebView</span></div>
+      </div>
+
+      <!-- Architecture -->
+      <div class="info-card">
+        <h3>🏗️ Architecture</h3>
+        <div style="font-size:0.8em;color:var(--text2);font-family:monospace;white-space:pre;line-height:1.8;">User (Telegram)
+  ↕ messages
+python-telegram-bot
+  ↕ state transitions
+State Machine (12 states)
+  ↕ persist
+Session Store (JSON)
+  ↕ [production]
+Binance KYC API</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="/static/app.js"></script>
+</body>
+</html>

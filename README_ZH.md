@@ -21,6 +21,25 @@
 - **会话持久化** — 每个用户的状态以 JSON 保存，重启不丢失
 - **Docker 部署** — 一条命令完成部署
 
+## 🌐 交互式 Web 演示
+
+在浏览器中体验完整 KYC 流程 — 无需 Telegram：
+
+```bash
+./scripts/demo.sh
+```
+
+打开：
+- **http://localhost:8099** — 💬 聊天演示（模拟 Telegram 对话）
+- **http://localhost:8099/business** — 💼 商业分析（市场数据、ROI 计算器、竞品分析）
+
+演示包含：
+- 模拟 Telegram 的实时聊天界面
+- 逐步进度跟踪
+- 与传统 KYC 的对比面板
+- 交互式 ROI 计算器
+- 完整竞品分析（Jumio、Onfido、Sumsub）
+
 ## 📋 架构
 
 ```
@@ -41,7 +60,7 @@
 
 ```
 binance-kyc-skill/
-├── src/binance_kyc/
+├── src/binance_kyc/             # 核心包
 │   ├── __init__.py              # 包元数据
 │   ├── cli.py                   # CLI 入口
 │   ├── config.py                # 配置（环境变量 + .env）
@@ -60,9 +79,18 @@ binance-kyc-skill/
 │   │   └── zh.json              # 中文模板
 │   └── utils/
 │       └── logging.py           # 结构化日志 (structlog)
-├── tests/                       # pytest 测试套件
+├── demo_server/                 # 交互式 Web 演示
+│   └── app.py                   # FastAPI 演示服务器
+├── static/                      # Web 演示前端
+│   ├── index.html               # 聊天演示页
+│   ├── business.html            # 商业分析页
+│   ├── style.css                # 暗黑主题 UI
+│   ├── app.js                   # 聊天演示逻辑
+│   └── i18n.js                  # 中英文切换
+├── tests/                       # pytest 测试套件（76 个测试）
 ├── scripts/
-│   ├── start.sh                 # 一键启动脚本
+│   ├── start.sh                 # 一键启动 Telegram Bot
+│   ├── demo.sh                  # 一键启动 Web 演示
 │   └── lint.sh                  # 代码检查 + 类型检查 + 测试
 ├── pyproject.toml               # PEP 621 项目配置
 ├── Dockerfile                   # 容器镜像
