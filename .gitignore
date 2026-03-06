@@ -1,7 +1,40 @@
-workspace/
+# Byte-compiled / optimized
 __pycache__/
-*.pyc
+*.py[cod]
+*$py.class
+
+# Virtual environment
+.venv/
+venv/
+env/
+
+# Distribution / packaging
+*.egg-info/
+dist/
+build/
+
+# Environment
 .env
+
+# Data (sessions, uploads)
+data/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Testing / Coverage
+.coverage
+htmlcov/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# OpenClaw sandbox marker
 .sandbox-installed
-kyc-sessions/
-kyc-uploads/

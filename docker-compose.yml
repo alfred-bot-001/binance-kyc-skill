@@ -1,0 +1,14 @@
+services:
+  kyc-bot:
+    build: .
+    container_name: binance-kyc-bot
+    restart: unless-stopped
+    env_file:
+      - .env
+    volumes:
+      - kyc-data:/app/data
+    ports:
+      - "8443:8443"
+
+volumes:
+  kyc-data:

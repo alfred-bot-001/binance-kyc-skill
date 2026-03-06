@@ -1,60 +1,194 @@
-# Binance KYC Skill
+# Binance KYC Telegram Bot
 
-Conversational KYC (Know Your Customer) verification flow for Binance, built as an [OpenClaw](https://openclaw.ai) skill. Users complete identity verification entirely through a Telegram bot chat interface.
+> Conversational identity verification via Telegram — complete KYC without leaving the chat.
 
-## Features
+[![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-blue.svg)](https://www.python.org/downloads/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+[![Code style: ruff](https://img.shields.io/badge/code%20style-ruff-000000.svg)](https://github.com/astral-sh/ruff)
 
-- 🔄 **Multi-step state machine** — Welcome → Personal Info → Document Upload → Selfie → Review → Submit
-- 🌍 **Multi-language** — English, Chinese (more coming)
-- ✅ **Input validation** — Name, DOB (18+), nationality, address, image format/size
-- 📄 **Multiple ID types** — Passport, National ID, Driver's License
-- 🔒 **Demo mode** — Runs without real API calls for testing
-- 💾 **Session persistence** — Per-user state saved as JSON
+[中文文档](README_ZH.md)
 
-## Flow
+---
+
+## ✨ Features
+
+- **Conversational Flow** — step-by-step identity verification through natural chat
+- **12-State Machine** — robust state management with full flow control
+- **Multi-language** — English, Chinese (extensible to any language)
+- **Input Validation** — name, DOB (18+), nationality, address, document images
+- **Multiple ID Types** — passport, national ID card, driver's license
+- **Demo Mode** — runs without real API calls for development and testing
+- **Persistent Sessions** — per-user state saved as JSON, survives restarts
+- **Docker Ready** — one-command deployment with Docker Compose
+
+## 📋 Architecture
 
 ```
-/start_kyc → Consent → Name → DOB → Nationality → Address
-→ Select Doc Type → Upload Front → [Upload Back] → Selfie
-→ Review & Confirm → Submitted ✅
+User (Telegram) ←→ python-telegram-bot ←→ State Machine ←→ Session Store (JSON)
+                                                ↓
+                                    [Production] Binance KYC API
 ```
 
-## Quick Start
+### KYC Flow
 
-### As an OpenClaw Skill
+```
+/start_kyc → Consent → Full Name → Date of Birth → Nationality → Address
+→ Select Document Type → Upload Front → [Upload Back] → Selfie
+→ Review & Confirm → Submitted → Approved ✅
+```
 
-1. Copy the `binance-kyc` folder into your OpenClaw `skills/` directory
-2. The agent will automatically pick it up when users mention KYC
-3. Connect via Telegram and type `/start_kyc`
+### Project Structure
 
-### Standalone Test
+```
+binance-kyc-skill/
+├── src/binance_kyc/
+│   ├── __init__.py              # Package metadata
+│   ├── cli.py                   # CLI entry point
+│   ├── config.py                # Settings (env vars + .env)
+│   ├── models/
+│   │   ├── enums.py             # KYCState, DocumentType, etc.
+│   │   └── session.py           # Pydantic session model
+│   ├── services/
+│   │   ├── state_machine.py     # State transitions & flow logic
+│   │   ├── session_store.py     # JSON file persistence
+│   │   └── validators.py        # Input validation
+│   ├── handlers/
+│   │   └── telegram.py          # Telegram bot handlers
+│   ├── messages/
+│   │   ├── __init__.py          # Message loader + language detection
+│   │   ├── en.json              # English templates
+│   │   └── zh.json              # Chinese templates
+│   └── utils/
+│       └── logging.py           # Structured logging (structlog)
+├── tests/                       # pytest test suite
+├── scripts/
+│   ├── start.sh                 # One-click start script
+│   └── lint.sh                  # Lint + type-check + test
+├── pyproject.toml               # PEP 621 project config
+├── Dockerfile                   # Container image
+├── docker-compose.yml           # One-command deployment
+├── .env.example                 # Configuration template
+├── SKILL.md                     # OpenClaw skill definition
+└── LICENSE                      # MIT License
+```
+
+## 🚀 Quick Start
+
+### Option 1: One-Click Script
 
 ```bash
-python3 kyc_flow.py
+git clone https://github.com/alfred-bot-001/binance-kyc-skill.git
+cd binance-kyc-skill
+
+# First run creates .env — edit it with your Telegram token
+./scripts/start.sh
+
+# Edit .env, then run again
+./scripts/start.sh
 ```
 
-## File Structure
-
-```
-├── SKILL.md          # Skill definition & agent behavior guide
-├── kyc_flow.py       # Core state machine & flow controller
-├── validators.py     # Input validation (name, DOB, nationality, etc.)
-├── messages/
-│   ├── en.json       # English message templates
-│   └── zh.json       # Chinese message templates
-└── README.md         # This file
-```
-
-## Production Setup
-
-Set environment variables to connect to real Binance KYC APIs:
+### Option 2: Manual Setup
 
 ```bash
-export BINANCE_KYC_MODE=production
-export BINANCE_KYC_API_KEY=your_key
-export BINANCE_KYC_API_SECRET=your_secret
+# Clone
+git clone https://github.com/alfred-bot-001/binance-kyc-skill.git
+cd binance-kyc-skill
+
+# Create virtual environment
+python3 -m venv .venv
+source .venv/bin/activate
+
+# Install
+pip install -e ".[dev]"
+
+# Configure
+cp .env.example .env
+# Edit .env — set BINANCE_KYC_TELEGRAM_TOKEN
+
+# Run
+binance-kyc run
 ```
 
-## License
+### Option 3: Docker
 
-MIT
+```bash
+cp .env.example .env
+# Edit .env — set BINANCE_KYC_TELEGRAM_TOKEN
+
+docker compose up -d
+```
+
+## ⚙️ Configuration
+
+All settings are controlled via environment variables (or `.env` file):
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `BINANCE_KYC_TELEGRAM_TOKEN` | *(required)* | Telegram bot token from @BotFather |
+| `BINANCE_KYC_MODE` | `demo` | `demo` or `production` |
+| `BINANCE_KYC_LOG_LEVEL` | `INFO` | `DEBUG`, `INFO`, `WARNING`, `ERROR` |
+| `BINANCE_KYC_DEFAULT_LANGUAGE` | `en` | Default language code |
+| `BINANCE_KYC_DATA_DIR` | `data` | Session & upload storage path |
+| `BINANCE_KYC_SESSION_TIMEOUT_MINUTES` | `30` | Inactivity timeout |
+| `BINANCE_KYC_API_KEY` | — | Binance API key (production only) |
+| `BINANCE_KYC_API_SECRET` | — | Binance API secret (production only) |
+
+## 🤖 Telegram Bot Setup
+
+1. Message [@BotFather](https://t.me/BotFather) on Telegram
+2. Create a new bot: `/newbot`
+3. Copy the token to your `.env` file
+4. Register commands with BotFather:
+
+```
+start_kyc - Start identity verification
+status - Check verification status
+cancel - Cancel current verification
+help - Show help message
+```
+
+## 🧪 Development
+
+```bash
+# Install dev dependencies
+pip install -e ".[dev]"
+
+# Run tests
+pytest
+
+# Run linter
+ruff check src/ tests/
+
+# Type checking
+mypy src/
+
+# Format code
+ruff format src/ tests/
+
+# All checks at once
+./scripts/lint.sh
+```
+
+## 🌍 Adding a Language
+
+1. Create `src/binance_kyc/messages/<lang_code>.json` based on `en.json`
+2. Translate all message strings
+3. (Optional) Add detection patterns to `messages/__init__.py`
+
+## 📦 Demo Mode vs Production
+
+### Demo Mode (default)
+- No real API calls
+- Verification auto-approves after 10 seconds
+- Images saved locally, not transmitted
+- Perfect for development and demos
+
+### Production Mode
+Set `BINANCE_KYC_MODE=production` and provide API credentials. The bot will:
+- Submit data to Binance KYC API endpoints
+- Perform real document verification
+- Return actual approval/rejection results
+
+## 📄 License
+
+[MIT](LICENSE)
