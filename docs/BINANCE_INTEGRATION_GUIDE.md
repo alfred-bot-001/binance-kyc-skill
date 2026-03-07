@@ -1,119 +1,244 @@
-# Binance 工程师对接指南
+# Binance Engineer Integration Guide
 
-> 面向 Binance 内部工程师：将 Chat KYC Skill 从 Demo 推向生产，Binance 侧需要提供什么。
-
----
-
-## 一句话总结
-
-**Binance 只需要提供 4 样东西：KYC API 接口、Liveness 页面 URL、Webhook 回调、API 密钥。**
-其他全部由 Skill 侧（AI 助手）完成。
+> What Binance needs to provide to take the Chat KYC Skill from demo to production.
 
 ---
 
-## 架构总览
+## TL;DR
+
+**Binance provides 4 things: KYC API endpoints, Liveness page URL, Webhook callbacks, API credentials.**
+Everything else is handled by the Skill (AI assistant side).
+
+---
+
+## Architecture
 
 ```
-用户的 AI 助手 (Telegram / WhatsApp / Web / 任何平台)
+User's AI Assistant (Telegram / WhatsApp / Web / any platform)
   │
-  ├── binance-kyc skill (安装在助手里)
+  ├── binance-kyc skill (installed in assistant)
   │     │
-  │     ├── 聊天收集信息 (姓名/生日/国籍/地址/证件)
-  │     ├── 调 Binance API 提交数据
-  │     ├── 发 Liveness 链接给用户
-  │     └── 等 Webhook 回调 → 通知用户结果
+  │     ├── Conversational data collection (name/DOB/nationality/address/ID)
+  │     ├── Calls Binance API to submit data
+  │     ├── Sends Liveness URL to user
+  │     └── Waits for Webhook callback → notifies user of result
   │
   ↕ HTTPS
   │
-  Binance KYC Backend (你们提供)
+  Binance KYC Backend (you provide this)
     ├── KYC REST API
-    ├── Liveness 页面 (现有能力)
-    └── Webhook 通知
+    ├── Liveness page (existing capability)
+    └── Webhook notifications
 ```
+
+### Key Insight
+
+The Skill acts as a **chat-native frontend** to Binance's existing KYC backend. No SDK, no WebView, no app integration — just API calls from the user's AI assistant.
 
 ---
 
-## Binance 需要提供的 4 样东西
+## What Binance Needs to Provide
 
-### 1. KYC REST API 接口
+### 1. KYC REST API Endpoints
 
-| 接口 | 方法 | 用途 |
-|------|------|------|
-| `/sapi/v1/kyc/session` | POST | 创建 KYC 会话，返回 session_id |
-| `/sapi/v1/kyc/personal-info` | POST | 提交个人信息 |
-| `/sapi/v1/kyc/document/upload` | POST | 上传证件照片 (multipart) |
-| `/sapi/v1/kyc/liveness/create` | POST | 获取活体检测页面 URL |
-| `/sapi/v1/kyc/submit` | POST | 最终提交审核 |
-| `/sapi/v1/kyc/status/{id}` | GET | 查询审核结果 |
+The Skill needs to call 6 endpoints (existing or new):
 
-如果 Binance 已有类似接口，只需告诉我 endpoint + 认证方式 + 字段命名，Skill 侧适配。
+| Endpoint | Method | Purpose |
+|----------|--------|---------|
+| `/sapi/v1/kyc/session` | POST | Create KYC session, return session_id |
+| `/sapi/v1/kyc/personal-info` | POST | Submit personal info (name, DOB, nationality, address) |
+| `/sapi/v1/kyc/document/upload` | POST | Upload ID document photos (multipart/form-data) |
+| `/sapi/v1/kyc/liveness/create` | POST | Generate liveness verification page URL |
+| `/sapi/v1/kyc/submit` | POST | Final submission for review |
+| `/sapi/v1/kyc/status/{session_id}` | GET | Query verification result |
 
-### 2. Liveness 活体检测页面
-
-这是 Binance 已有的能力。Skill 的做法：
-1. 调 API 获取带 token 的 liveness URL
-2. 把链接发给用户
-3. 用户在手机浏览器打开 → 完成人脸验证
-4. Binance 通过 webhook 通知结果
-
-要求：URL 可在移动端浏览器打开（不依赖 Binance App），有效期 10 分钟，支持 3 次重试。
-
-### 3. Webhook 回调
-
-活体完成时：
+**Example — Create Session:**
 ```json
-POST {webhook_url}/kyc/liveness
-{ "session_id": "xxx", "result": "passed" }
+POST /sapi/v1/kyc/session
+{
+  "user_id": "binance_uid_12345",
+  "source": "chat_skill",
+  "language": "zh"
+}
+
+Response:
+{
+  "session_id": "KYC-20260306-A1B2C3",
+  "expires_at": "2026-03-06T10:00:00Z"
+}
 ```
 
-审核完成时：
+**Example — Submit Personal Info:**
 ```json
-POST {webhook_url}/kyc/result
-{ "session_id": "xxx", "result": "approved", "reason": null }
+POST /sapi/v1/kyc/personal-info
+{
+  "session_id": "KYC-20260306-A1B2C3",
+  "full_name": "Zhang San",
+  "date_of_birth": "1990-05-15",
+  "nationality": "CN",
+  "address": "88 Jianguo Rd, Chaoyang, Beijing, 100022"
+}
 ```
 
-### 4. API 密钥
+**Example — Upload Document:**
+```
+POST /sapi/v1/kyc/document/upload
+Content-Type: multipart/form-data
 
-API Key + Secret（HMAC 签名），或 OAuth2，或 Binance 内部认证。
+session_id: KYC-20260306-A1B2C3
+doc_type: national_id
+side: front
+file: [binary image data]
+```
+
+**Example — Get Liveness URL:**
+```json
+POST /sapi/v1/kyc/liveness/create
+{
+  "session_id": "KYC-20260306-A1B2C3"
+}
+
+Response:
+{
+  "liveness_url": "https://kyc.binance.com/liveness?session=xxx&token=xxx",
+  "expires_in": 600
+}
+```
+
+> If Binance already has similar endpoints, just share the API docs / Swagger — the Skill will adapt to your schema.
 
 ---
 
-## Binance 不需要做的事
+### 2. Liveness Detection Page
 
-| 事项 | 谁负责 |
-|------|--------|
-| 聊天界面 / 前端 UI | Skill（在聊天中完成） |
-| 多语言翻译 | Skill（自带 7+ 语言） |
-| 信息收集对话流 | Skill 状态机 |
-| 输入验证 | Skill 侧验证后提交 |
-| 重试/异常引导 | Skill 处理 |
-| 多平台适配 | Skill（Telegram/WhatsApp/Web） |
-| SDK / WebView | 完全不需要 |
+**This is an existing Binance capability — no new development needed.**
+
+How the Skill uses it:
+1. Calls API to get a tokenized liveness URL
+2. Sends the link to the user in chat
+3. User opens it in mobile browser → completes face verification on Binance's page
+4. Binance sends webhook callback with the result
+
+**Requirements:**
+- URL must work in mobile browsers (no Binance App dependency)
+- Recommended expiry: 10 minutes
+- Support up to 3 retry attempts
 
 ---
 
-## 对接工期
+### 3. Webhook Callbacks
 
-| 阶段 | 时间 |
-|------|------|
-| Binance 提供 API 文档 | 1-2 天 |
-| Skill 适配 + staging 联调 | 3-5 天 |
-| 集成测试 | 2-3 天 |
-| 灰度测试 | 1 周 |
-| 正式发布 | - |
-| **总计** | **2-3 周** |
+Binance sends POST requests to the Skill's registered webhook URL when:
+
+**Event A — Liveness Completed:**
+```json
+POST {webhook_base}/kyc/liveness
+{
+  "session_id": "KYC-20260306-A1B2C3",
+  "event": "liveness_completed",
+  "result": "passed",
+  "timestamp": "2026-03-06T09:06:30Z"
+}
+```
+
+**Event B — Verification Completed:**
+```json
+POST {webhook_base}/kyc/result
+{
+  "session_id": "KYC-20260306-A1B2C3",
+  "event": "verification_completed",
+  "result": "approved",
+  "reason": null,
+  "timestamp": "2026-03-06T12:00:00Z"
+}
+```
+
+When a webhook fires, the Skill will:
+1. Look up the user's session
+2. Update the KYC state
+3. Send a proactive message to the user ("Your KYC is approved!")
+
+---
+
+### 4. API Credentials
+
+The Skill needs credentials to authenticate API calls:
+
+- **Option A:** API Key + Secret (HMAC signature) — standard Binance auth
+- **Option B:** OAuth2 Client Credentials
+- **Option C:** Internal service-to-service auth
+
+Skill configuration:
+```env
+BINANCE_KYC_API_KEY=xxx
+BINANCE_KYC_API_SECRET=xxx
+BINANCE_KYC_API_BASE=https://api.binance.com
+BINANCE_KYC_WEBHOOK_BASE=https://skill.example.com/webhook
+```
+
+---
+
+## What Binance Does NOT Need to Do
+
+| Item | Who Handles It |
+|------|---------------|
+| Chat UI / Frontend | Skill (all in-chat) |
+| Multi-language support | Skill (7+ languages built-in) |
+| Conversational flow / UX | Skill state machine |
+| Input validation | Skill validates before submitting |
+| Retry / error guidance | Skill handles |
+| Multi-platform support | Skill (Telegram, WhatsApp, Web, etc.) |
+| SDK / WebView integration | Not needed at all |
+| App modifications | Not needed at all |
+
+**Bottom line: Binance provides the backend API. The Skill IS the frontend.**
+
+---
+
+## Integration Timeline
+
+| Phase | Duration |
+|-------|----------|
+| Binance provides API documentation | 1-2 days |
+| Skill adapts to API + staging integration | 3-5 days |
+| Integration testing (happy path + edge cases) | 2-3 days |
+| Internal beta / canary rollout | 1 week |
+| Production launch | — |
+| **Total** | **2-3 weeks** |
+
+---
+
+## Security & Compliance
+
+- **Sensitive operations (liveness, final review) stay on Binance side.** The Skill is just a data collection and delivery pipeline.
+- **Document photos** are transmitted via encrypted HTTPS directly to Binance API. Not stored long-term on the Skill side.
+- **Session data** (personal info) is encrypted at rest and auto-deleted after verification completes.
+- **GDPR/CCPA:** User can say "cancel" at any point → session data is immediately purged.
+- **Audit trail:** Full conversation logs available for compliance review.
 
 ---
 
 ## FAQ
 
-**安全性？** 敏感操作（活体/审核）在 Binance 侧。Skill 只是信息管道，照片加密直传 API。
+**Q: Does this conflict with the existing KYC system?**
+A: No. This is just a new frontend entry point (chat). The backend still uses Binance's existing KYC review pipeline.
 
-**跟现有系统冲突？** 不冲突。只是新的前端入口（聊天），后端走现有 KYC 系统。
+**Q: Do we need to modify the Binance App?**
+A: No. This is completely independent of the app.
 
-**需要改 Binance App？** 不需要。完全独立。
+**Q: What if the user abandons mid-flow?**
+A: The Skill has a 30-minute session timeout. Users can also resume later — the session picks up where they left off.
+
+**Q: How does this handle different countries' requirements?**
+A: The Skill supports 25+ countries and adapts the document requirements based on nationality. Country-specific rules can be configured via the API response.
+
+**Q: What about fraud / deepfakes?**
+A: Liveness detection is handled entirely by Binance's existing system. The Skill doesn't interfere with or bypass any security checks.
 
 ---
 
-Demo: https://alfred-bot-001.github.io/binance-kyc-skill/user-demo.html
-GitHub: https://github.com/alfred-bot-001/binance-kyc-skill
+## Links
+
+- **Live Demo:** https://alfred-bot-001.github.io/binance-kyc-skill/user-demo.html
+- **GitHub:** https://github.com/alfred-bot-001/binance-kyc-skill
+- **Skill Definition:** [SKILL.md](../SKILL.md)
