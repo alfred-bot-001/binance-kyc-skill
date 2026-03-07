@@ -3,520 +3,182 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Binance KYC - 智能助手演示</title>
+    <title>Binance KYC - AI Assistant Demo</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
+        * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-            background: #0b0e11;
-            color: #fff;
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            padding: 20px;
-            overflow-x: hidden;
+            background: #0b0e11; color: #fff; min-height: 100vh;
+            display: flex; flex-direction: column; align-items: center;
+            padding: 20px; overflow-x: hidden;
         }
-
-        .header {
-            text-align: center;
-            margin-bottom: 30px;
-            max-width: 600px;
+        .top-bar { display: flex; align-items: center; justify-content: center; gap: 16px; margin-bottom: 8px; width: 100%; max-width: 600px; }
+        .lang-toggle {
+            background: #1a1e2e; border: 1px solid rgba(240,185,11,0.3); border-radius: 8px;
+            padding: 6px 16px; color: #f0b90b; font-size: 13px; font-weight: 600;
+            cursor: pointer; transition: all 0.2s; white-space: nowrap;
         }
-
+        .lang-toggle:hover { background: #f0b90b; color: #0b0e11; }
+        .header { text-align: center; margin-bottom: 24px; max-width: 600px; }
         .header h1 {
-            font-size: 28px;
-            font-weight: 700;
-            margin-bottom: 8px;
+            font-size: 28px; font-weight: 700; margin-bottom: 8px;
             background: linear-gradient(135deg, #f0b90b 0%, #ffd700 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
         }
-
-        .header p {
-            font-size: 14px;
-            color: #888;
-            line-height: 1.5;
-        }
-
+        .header p { font-size: 14px; color: #888; line-height: 1.5; }
         .scenario-toggle {
-            display: flex;
-            gap: 12px;
-            justify-content: center;
-            margin-bottom: 30px;
-            background: #1a1e2e;
-            padding: 8px;
-            border-radius: 12px;
-            max-width: 500px;
+            display: flex; gap: 12px; justify-content: center; margin-bottom: 30px;
+            background: #1a1e2e; padding: 8px; border-radius: 12px; max-width: 520px;
         }
-
         .scenario-btn {
-            flex: 1;
-            padding: 12px 20px;
-            border: none;
-            border-radius: 8px;
-            background: transparent;
-            color: #888;
-            font-size: 14px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
+            flex: 1; padding: 12px 16px; border: none; border-radius: 8px;
+            background: transparent; color: #888; font-size: 13px; font-weight: 600;
+            cursor: pointer; transition: all 0.3s ease;
         }
-
-        .scenario-btn.active {
-            background: #f0b90b;
-            color: #0b0e11;
-        }
-
-        .scenario-btn:hover:not(.active) {
-            background: rgba(240, 185, 11, 0.1);
-            color: #f0b90b;
-        }
-
+        .scenario-btn.active { background: #f0b90b; color: #0b0e11; }
+        .scenario-btn:hover:not(.active) { background: rgba(240,185,11,0.1); color: #f0b90b; }
         .phone-container {
-            width: 375px;
-            height: 750px;
-            background: #000;
-            border-radius: 40px;
-            padding: 12px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.1);
-            position: relative;
-            overflow: hidden;
+            width: 375px; height: 750px; background: #000; border-radius: 40px;
+            padding: 12px; box-shadow: 0 20px 60px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.1);
+            position: relative; overflow: hidden;
         }
-
         .phone-notch {
-            position: absolute;
-            top: 0;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 150px;
-            height: 30px;
-            background: #000;
-            border-radius: 0 0 20px 20px;
-            z-index: 10;
+            position: absolute; top: 0; left: 50%; transform: translateX(-50%);
+            width: 150px; height: 30px; background: #000; border-radius: 0 0 20px 20px; z-index: 10;
         }
-
         .phone-screen {
-            width: 100%;
-            height: 100%;
-            background: #0b0e11;
-            border-radius: 30px;
-            overflow: hidden;
-            display: flex;
-            flex-direction: column;
+            width: 100%; height: 100%; background: #0b0e11; border-radius: 30px;
+            overflow: hidden; display: flex; flex-direction: column;
         }
-
         .status-bar {
-            height: 44px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 0 20px;
-            font-size: 12px;
-            color: #fff;
+            height: 44px; display: flex; justify-content: space-between;
+            align-items: center; padding: 0 20px; font-size: 12px; color: #fff;
         }
-
         .chat-header {
-            padding: 12px 20px;
-            background: #1a1e2e;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            padding: 12px 20px; background: #1a1e2e; display: flex;
+            align-items: center; gap: 12px; border-bottom: 1px solid rgba(255,255,255,0.05);
         }
-
         .chat-header-avatar {
-            width: 36px;
-            height: 36px;
-            border-radius: 50%;
+            width: 36px; height: 36px; border-radius: 50%;
             background: linear-gradient(135deg, #f0b90b 0%, #ffd700 100%);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 18px;
+            display: flex; align-items: center; justify-content: center; font-size: 18px;
         }
-
-        .chat-header-info h3 {
-            font-size: 15px;
-            font-weight: 600;
-        }
-
-        .chat-header-info p {
-            font-size: 12px;
-            color: #4ade80;
-        }
-
+        .chat-header-info h3 { font-size: 15px; font-weight: 600; }
+        .chat-header-info p { font-size: 12px; color: #4ade80; }
         .chat-messages {
-            flex: 1;
-            overflow-y: auto;
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
+            flex: 1; overflow-y: auto; padding: 20px;
+            display: flex; flex-direction: column; gap: 12px;
         }
-
-        .chat-messages::-webkit-scrollbar {
-            width: 4px;
-        }
-
-        .chat-messages::-webkit-scrollbar-track {
-            background: transparent;
-        }
-
-        .chat-messages::-webkit-scrollbar-thumb {
-            background: #333;
-            border-radius: 2px;
-        }
-
-        .message {
-            display: flex;
-            gap: 8px;
-            animation: messageSlideIn 0.3s ease;
-        }
-
-        @keyframes messageSlideIn {
-            from {
-                opacity: 0;
-                transform: translateY(10px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        .message.user {
-            flex-direction: row-reverse;
-        }
-
+        .chat-messages::-webkit-scrollbar { width: 4px; }
+        .chat-messages::-webkit-scrollbar-thumb { background: #333; border-radius: 2px; }
+        .message { display: flex; gap: 8px; animation: msgIn 0.3s ease; }
+        @keyframes msgIn { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
+        .message.user { flex-direction: row-reverse; }
         .message-avatar {
-            width: 32px;
-            height: 32px;
-            border-radius: 50%;
-            flex-shrink: 0;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 16px;
+            width: 32px; height: 32px; border-radius: 50%; flex-shrink: 0;
+            display: flex; align-items: center; justify-content: center; font-size: 16px;
         }
-
-        .message.bot .message-avatar {
-            background: linear-gradient(135deg, #f0b90b 0%, #ffd700 100%);
-        }
-
-        .message.user .message-avatar {
-            background: #3b82f6;
-        }
-
-        .message-content {
-            max-width: 70%;
-        }
-
-        .message-bubble {
-            padding: 10px 14px;
-            border-radius: 16px;
-            font-size: 14px;
-            line-height: 1.5;
-        }
-
-        .message.bot .message-bubble {
-            background: #1a1e2e;
-            border-radius: 16px 16px 16px 4px;
-        }
-
-        .message.user .message-bubble {
-            background: #3b82f6;
-            border-radius: 16px 16px 4px 16px;
-        }
-
+        .message.bot .message-avatar { background: linear-gradient(135deg, #f0b90b 0%, #ffd700 100%); }
+        .message.user .message-avatar { background: #3b82f6; }
+        .message-content { max-width: 70%; }
+        .message-bubble { padding: 10px 14px; border-radius: 16px; font-size: 14px; line-height: 1.5; }
+        .message.bot .message-bubble { background: #1a1e2e; border-radius: 16px 16px 16px 4px; }
+        .message.user .message-bubble { background: #3b82f6; border-radius: 16px 16px 4px 16px; }
         .typing-indicator {
-            display: flex;
-            gap: 4px;
-            padding: 10px 14px;
-            background: #1a1e2e;
-            border-radius: 16px;
-            width: fit-content;
+            display: flex; gap: 4px; padding: 10px 14px;
+            background: #1a1e2e; border-radius: 16px; width: fit-content;
         }
-
         .typing-dot {
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            background: #666;
-            animation: typingBounce 1.4s infinite;
+            width: 8px; height: 8px; border-radius: 50%;
+            background: #666; animation: bounce 1.4s infinite;
         }
-
-        .typing-dot:nth-child(2) {
-            animation-delay: 0.2s;
-        }
-
-        .typing-dot:nth-child(3) {
-            animation-delay: 0.4s;
-        }
-
-        @keyframes typingBounce {
-            0%, 60%, 100% {
-                transform: translateY(0);
-            }
-            30% {
-                transform: translateY(-8px);
-            }
-        }
-
-        .quick-replies {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 6px;
-            margin-top: 8px;
-        }
-
+        .typing-dot:nth-child(2) { animation-delay: 0.2s; }
+        .typing-dot:nth-child(3) { animation-delay: 0.4s; }
+        @keyframes bounce { 0%,60%,100% { transform:translateY(0); } 30% { transform:translateY(-8px); } }
+        .quick-replies { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
         .quick-reply-btn {
-            padding: 8px 14px;
-            background: rgba(240, 185, 11, 0.1);
-            border: 1px solid #f0b90b;
-            border-radius: 20px;
-            color: #f0b90b;
-            font-size: 13px;
-            cursor: pointer;
-            transition: all 0.2s ease;
+            padding: 8px 14px; background: rgba(240,185,11,0.1); border: 1px solid #f0b90b;
+            border-radius: 20px; color: #f0b90b; font-size: 13px; cursor: pointer; transition: all 0.2s;
         }
-
-        .quick-reply-btn:hover {
-            background: #f0b90b;
-            color: #0b0e11;
-        }
-
-        .progress-bar {
-            width: 100%;
-            height: 4px;
-            background: rgba(240, 185, 11, 0.2);
-            border-radius: 2px;
-            overflow: hidden;
-            margin-top: 8px;
-        }
-
-        .progress-fill {
-            height: 100%;
-            background: linear-gradient(90deg, #f0b90b 0%, #ffd700 100%);
-            animation: progressFill 2.5s ease;
-            width: 0%;
-        }
-
-        @keyframes progressFill {
-            to {
-                width: 100%;
-            }
-        }
-
+        .quick-reply-btn:hover { background: #f0b90b; color: #0b0e11; }
+        .progress-bar { width:100%; height:4px; background:rgba(240,185,11,0.2); border-radius:2px; overflow:hidden; margin-top:8px; }
+        .progress-fill { height:100%; background:linear-gradient(90deg,#f0b90b,#ffd700); animation:pFill 2.5s ease forwards; width:0; }
+        @keyframes pFill { to { width:100%; } }
         .info-card {
-            background: #1a1e2e;
-            border: 1px solid rgba(240, 185, 11, 0.3);
-            border-radius: 12px;
-            padding: 12px;
-            margin-top: 8px;
+            background: #1a1e2e; border: 1px solid rgba(240,185,11,0.3);
+            border-radius: 12px; padding: 12px; margin-top: 8px;
         }
-
-        .info-card-row {
-            display: flex;
-            justify-content: space-between;
-            padding: 6px 0;
-            font-size: 13px;
-        }
-
-        .info-card-label {
-            color: #888;
-        }
-
-        .info-card-value {
-            color: #fff;
-            font-weight: 500;
-        }
-
+        .info-card-row { display:flex; justify-content:space-between; padding:6px 0; font-size:13px; }
+        .info-card-label { color: #888; }
+        .info-card-value { color: #fff; font-weight: 500; }
         .face-recognition {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            padding: 20px;
-            background: #1a1e2e;
-            border-radius: 12px;
-            margin-top: 8px;
+            display:flex; flex-direction:column; align-items:center;
+            padding:20px; background:#1a1e2e; border-radius:12px; margin-top:8px;
         }
-
         .face-scan-container {
-            position: relative;
-            width: 200px;
-            height: 240px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            position:relative; width:200px; height:240px;
+            display:flex; align-items:center; justify-content:center;
         }
-
         .scan-frame {
-            position: absolute;
-            width: 150px;
-            height: 200px;
-            border: 3px dashed #f0b90b;
-            border-radius: 50%;
-            animation: rotateScan 3s linear infinite;
+            position:absolute; width:150px; height:200px;
+            border:3px dashed #f0b90b; border-radius:50%; animation:rotateScan 3s linear infinite;
         }
-
-        @keyframes rotateScan {
-            from {
-                transform: rotate(0deg);
-            }
-            to {
-                transform: rotate(360deg);
-            }
-        }
-
-        .cartoon-face {
-            width: 120px;
-            height: 120px;
-            position: relative;
-        }
-
+        @keyframes rotateScan { from{transform:rotate(0deg);} to{transform:rotate(360deg);} }
+        .cartoon-face { width:120px; height:120px; position:relative; }
         .face-circle {
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(135deg, #ffd700 0%, #f0b90b 100%);
-            border-radius: 50%;
-            position: relative;
+            width:100%; height:100%;
+            background:linear-gradient(135deg,#ffd700,#f0b90b); border-radius:50%; position:relative;
         }
-
         .face-eye {
-            position: absolute;
-            width: 12px;
-            height: 12px;
-            background: #0b0e11;
-            border-radius: 50%;
-            top: 40%;
-            animation: blink 3s infinite;
+            position:absolute; width:12px; height:12px; background:#0b0e11;
+            border-radius:50%; top:40%; animation:blink 3s infinite;
         }
-
-        .face-eye.left {
-            left: 30%;
-        }
-
-        .face-eye.right {
-            right: 30%;
-        }
-
-        @keyframes blink {
-            0%, 48%, 52%, 100% {
-                transform: scaleY(1);
-            }
-            50% {
-                transform: scaleY(0.1);
-            }
-        }
-
+        .face-eye.left { left:30%; }
+        .face-eye.right { right:30%; }
+        @keyframes blink { 0%,48%,52%,100%{transform:scaleY(1);} 50%{transform:scaleY(0.1);} }
         .face-smile {
-            position: absolute;
-            width: 40px;
-            height: 20px;
-            border: 3px solid #0b0e11;
-            border-top: none;
-            border-radius: 0 0 40px 40px;
-            bottom: 30%;
-            left: 50%;
-            transform: translateX(-50%);
+            position:absolute; width:40px; height:20px; border:3px solid #0b0e11;
+            border-top:none; border-radius:0 0 40px 40px; bottom:30%; left:50%; transform:translateX(-50%);
         }
-
-        .scan-status {
-            margin-top: 16px;
-            font-size: 14px;
-            color: #f0b90b;
-            font-weight: 600;
-            text-align: center;
-        }
-
+        .scan-status { margin-top:16px; font-size:14px; color:#f0b90b; font-weight:600; text-align:center; }
         .chat-input-container {
-            padding: 12px 20px;
-            background: #1a1e2e;
-            border-top: 1px solid rgba(255, 255, 255, 0.05);
-            display: flex;
-            gap: 8px;
-            align-items: center;
+            padding:12px 20px; background:#1a1e2e;
+            border-top:1px solid rgba(255,255,255,0.05); display:flex; gap:8px; align-items:center;
         }
-
         .chat-input {
-            flex: 1;
-            padding: 10px 14px;
-            background: #0b0e11;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 20px;
-            color: #fff;
-            font-size: 14px;
-            outline: none;
+            flex:1; padding:10px 14px; background:#0b0e11;
+            border:1px solid rgba(255,255,255,0.1); border-radius:20px;
+            color:#fff; font-size:14px; outline:none;
         }
-
-        .chat-input:focus {
-            border-color: #f0b90b;
-        }
-
+        .chat-input:focus { border-color:#f0b90b; }
         .send-btn {
-            width: 36px;
-            height: 36px;
-            background: #f0b90b;
-            border: none;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            transition: all 0.2s ease;
+            width:36px; height:36px; background:#f0b90b; border:none; border-radius:50%;
+            display:flex; align-items:center; justify-content:center; cursor:pointer; transition:all 0.2s;
         }
-
-        .send-btn:hover {
-            transform: scale(1.1);
-        }
-
+        .send-btn:hover { transform:scale(1.1); }
         .home-indicator {
-            width: 134px;
-            height: 5px;
-            background: rgba(255, 255, 255, 0.3);
-            border-radius: 3px;
-            position: absolute;
-            bottom: 8px;
-            left: 50%;
-            transform: translateX(-50%);
+            width:134px; height:5px; background:rgba(255,255,255,0.3); border-radius:3px;
+            position:absolute; bottom:8px; left:50%; transform:translateX(-50%);
         }
-
         .complete-badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            padding: 8px 14px;
-            background: rgba(74, 222, 128, 0.1);
-            border: 1px solid #4ade80;
-            border-radius: 20px;
-            color: #4ade80;
-            font-size: 13px;
-            font-weight: 600;
-            margin-top: 8px;
+            display:inline-flex; align-items:center; gap:6px; padding:8px 14px;
+            background:rgba(74,222,128,0.1); border:1px solid #4ade80;
+            border-radius:20px; color:#4ade80; font-size:13px; font-weight:600; margin-top:8px;
         }
-
-        @media (max-width: 500px) {
-            .phone-container {
-                transform: scale(0.9);
-            }
-            
-            .header h1 {
-                font-size: 24px;
-            }
+        @media (max-width:500px) {
+            .phone-container { transform:scale(0.85); transform-origin:top center; }
+            .header h1 { font-size:22px; }
+            .scenario-toggle { flex-direction:column; gap:8px; }
         }
     </style>
 </head>
 <body>
-    <div class="header">
-        <h1>🤖 智能助手 × Binance KYC</h1>
-        <p>演示个人AI助手如何通过安装Skill，帮助用户轻松完成Binance注册和KYC认证流程</p>
+    <div class="top-bar">
+        <div class="header">
+            <h1 id="page-title">🤖 智能助手 × Binance KYC</h1>
+            <p id="page-subtitle">演示个人AI助手如何通过安装Skill，帮助用户轻松完成Binance注册和KYC认证流程</p>
+        </div>
+        <button class="lang-toggle" id="lang-btn" onclick="toggleLang()">EN</button>
     </div>
 
     <div class="scenario-toggle">
@@ -531,25 +193,17 @@
     <div class="phone-container">
         <div class="phone-notch"></div>
         <div class="phone-screen">
-            <div class="status-bar">
-                <div>9:41</div>
-                <div>📶 📡 🔋</div>
-            </div>
-            
+            <div class="status-bar"><div>9:41</div><div>📶 📡 🔋</div></div>
             <div class="chat-header">
                 <div class="chat-header-avatar">🐾</div>
                 <div class="chat-header-info">
-                    <h3>我的AI助手</h3>
-                    <p>● 在线</p>
+                    <h3 id="chat-title">我的AI助手</h3>
+                    <p id="chat-status">● 在线</p>
                 </div>
             </div>
-
-            <div class="chat-messages" id="chat-messages">
-                <!-- Messages will be inserted here -->
-            </div>
-
+            <div class="chat-messages" id="chat-messages"></div>
             <div class="chat-input-container">
-                <input type="text" class="chat-input" placeholder="输入消息..." id="chat-input">
+                <input type="text" class="chat-input" id="chat-input">
                 <button class="send-btn" onclick="sendUserMessage()">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
                         <path d="M22 2L11 13M22 2L15 22L11 13M22 2L2 9L11 13" stroke="#0b0e11" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
@@ -561,252 +215,218 @@
     </div>
 
     <script>
-        let currentScenario = 'no-info';
-        let conversationState = {
-            stage: 'initial',
-            userData: {}
-        };
+    let lang = 'zh';
+    let currentScenario = 'no-info';
+    let playingAbort = false;
 
-        const scenarios = {
+    const i18n = {
+        title: { zh: '🤖 智能助手 × Binance KYC', en: '🤖 AI Assistant × Binance KYC' },
+        subtitle: {
+            zh: '演示个人AI助手如何通过安装Skill，帮助用户轻松完成Binance注册和KYC认证流程',
+            en: 'Demo: How a personal AI assistant installs a Skill to seamlessly complete Binance registration and KYC verification'
+        },
+        btnNoInfo: { zh: '🆕 Bot 没有主人信息', en: '🆕 No Owner Info' },
+        btnHasInfo: { zh: '✅ Bot 已有主人信息', en: '✅ Has Owner Info' },
+        chatTitle: { zh: '我的AI助手', en: 'My AI Assistant' },
+        chatStatus: { zh: '● 在线', en: '● Online' },
+        placeholder: { zh: '输入消息...', en: 'Type a message...' },
+        installing: { zh: '正在安装 Binance skill...', en: 'Installing Binance skill...' },
+        scanPrepare: { zh: '准备中...', en: 'Preparing...' },
+        scanScanning: { zh: '正在扫描...', en: 'Scanning...' },
+        scanLiveness: { zh: '检测活体...', en: 'Detecting liveness...' },
+        scanSuccess: { zh: '✅ 匹配成功', en: '✅ Match successful' },
+        completeBadge: { zh: '🎉 KYC 认证完成！', en: '🎉 KYC Verification Complete!' },
+        completeMsg: {
+            zh: '您的Binance账户已成功注册并通过KYC验证，现在可以开始交易了！',
+            en: 'Your Binance account has been successfully registered and KYC verified. You can start trading now!'
+        },
+    };
+
+    function T(key) { return i18n[key] ? (i18n[key][lang] || i18n[key]['zh']) : key; }
+
+    function getScenarios() {
+        const zh = lang === 'zh';
+        return {
             'no-info': [
-                { type: 'user', text: '我想注册binance账户并完成KYC认证', delay: 500 },
-                { type: 'bot', text: '好的！我来帮你完成。让我先安装 Binance skill...', delay: 1000 },
-                { type: 'bot', html: createProgressBar(), delay: 2500 },
-                { type: 'bot', text: '✅ Binance skill 已安装！现在开始注册和KYC流程。', delay: 500 },
-                { type: 'bot', text: '首先，请告诉我您的姓名：', delay: 800, quickReplies: ['张三', '李明', '王芳'] },
-                { type: 'user', text: '张三', delay: 1000, callback: () => { conversationState.userData.name = '张三'; } },
-                { type: 'bot', text: '好的，张三。请提供您的出生日期（格式：YYYY-MM-DD）：', delay: 800, quickReplies: ['1990-01-15', '1985-06-20', '1995-12-08'] },
-                { type: 'user', text: '1990-01-15', delay: 1000, callback: () => { conversationState.userData.dob = '1990-01-15'; } },
-                { type: 'bot', text: '请选择您的国籍：', delay: 800, quickReplies: ['中国', '美国', '新加坡'] },
-                { type: 'user', text: '中国', delay: 1000, callback: () => { conversationState.userData.nationality = '中国'; } },
-                { type: 'bot', text: '请提供您的详细地址：', delay: 800 },
-                { type: 'user', text: '北京市朝阳区建国路88号', delay: 1200, callback: () => { conversationState.userData.address = '北京市朝阳区建国路88号'; } },
-                { type: 'bot', text: '请选择您要上传的证件类型：', delay: 800, quickReplies: ['身份证', '护照', '驾照'] },
-                { type: 'user', text: '身份证', delay: 1000, callback: () => { conversationState.userData.idType = '身份证'; } },
-                { type: 'bot', text: '📸 请上传您的身份证正反面照片（模拟上传中...）', delay: 1500 },
-                { type: 'bot', text: '✅ 证件照片上传成功！', delay: 500 },
-                { type: 'bot', text: '现在需要进行人脸识别验证。请保持面部清晰可见。', delay: 1000 },
-                { type: 'bot', html: createFaceRecognition(), delay: 5000 },
-                { type: 'bot', html: '<div class="complete-badge"><span>🎉</span><span>KYC 认证完成！</span></div><div style="margin-top: 8px; font-size: 13px; color: #888;">您的Binance账户已成功注册并通过KYC验证，现在可以开始交易了！</div>', delay: 500 }
+                { type:'user', text: zh ? '我想注册binance账户并完成KYC认证' : 'I want to register a Binance account and complete KYC verification', delay:500 },
+                { type:'bot', text: zh ? '好的！我来帮你完成。让我先安装 Binance skill...' : 'Sure! Let me help you with that. Let me install the Binance skill first...', delay:1000 },
+                { type:'bot', html:'progress', delay:2500 },
+                { type:'bot', text: zh ? '✅ Binance skill 已安装！现在开始注册和KYC流程。' : '✅ Binance skill installed! Let\'s start the registration and KYC process.', delay:500 },
+                { type:'bot', text: zh ? '首先，请告诉我您的姓名：' : 'First, please tell me your full name:', delay:800,
+                  quickReplies: zh ? ['张三','李明','王芳'] : ['John Smith','David Lee','Sarah Wang'] },
+                { type:'user', text: zh ? '张三' : 'John Smith', delay:1000 },
+                { type:'bot', text: zh ? '好的，张三。请提供您的出生日期（格式：YYYY-MM-DD）：' : 'Got it, John Smith. Please provide your date of birth (YYYY-MM-DD):', delay:800,
+                  quickReplies: ['1990-01-15','1985-06-20','1995-12-08'] },
+                { type:'user', text:'1990-01-15', delay:1000 },
+                { type:'bot', text: zh ? '请选择您的国籍：' : 'Please select your nationality:', delay:800,
+                  quickReplies: zh ? ['中国','美国','新加坡'] : ['United States','United Kingdom','Singapore'] },
+                { type:'user', text: zh ? '中国' : 'United States', delay:1000 },
+                { type:'bot', text: zh ? '请提供您的详细地址：' : 'Please provide your full address:', delay:800 },
+                { type:'user', text: zh ? '北京市朝阳区建国路88号' : '123 Main St, New York, NY 10001, USA', delay:1200 },
+                { type:'bot', text: zh ? '请选择您要上传的证件类型：' : 'Please select the type of ID document:', delay:800,
+                  quickReplies: zh ? ['身份证','护照','驾照'] : ['Passport','National ID','Driver\'s License'] },
+                { type:'user', text: zh ? '身份证' : 'Passport', delay:1000 },
+                { type:'bot', text: zh ? '📸 请上传您的身份证正反面照片（模拟上传中...）' : '📸 Please upload photos of your document (simulating upload...)', delay:1500 },
+                { type:'bot', text: zh ? '✅ 证件照片上传成功！' : '✅ Document photos uploaded successfully!', delay:500 },
+                { type:'bot', text: zh ? '现在需要进行人脸识别验证。请保持面部清晰可见。' : 'Now we need facial recognition verification. Please keep your face clearly visible.', delay:1000 },
+                { type:'bot', html:'face', delay:5000 },
+                { type:'bot', html:'complete', delay:500 },
             ],
             'has-info': [
-                { type: 'user', text: '我想注册binance账户并完成KYC认证', delay: 500 },
-                { type: 'bot', text: '好的！我来帮你完成。让我先安装 Binance skill...', delay: 1000 },
-                { type: 'bot', html: createProgressBar(), delay: 2500 },
-                { type: 'bot', text: '✅ Binance skill 已安装！现在开始注册和KYC流程。', delay: 500 },
-                { type: 'bot', text: '我已经有你的个人信息了，让我确认一下：', delay: 1000 },
-                { type: 'bot', html: createInfoCard(), delay: 500 },
-                { type: 'bot', text: '信息是否正确？', delay: 800, quickReplies: ['✅ 确认', '❌ 需要修改'] },
-                { type: 'user', text: '✅ 确认', delay: 1000 },
-                { type: 'bot', text: '太好了！让我检查一下证件信息...', delay: 1000 },
-                { type: 'bot', text: '✅ 已找到您之前上传的身份证件！', delay: 800 },
-                { type: 'bot', text: '现在只需要进行人脸识别验证即可完成。请保持面部清晰可见。', delay: 1000 },
-                { type: 'bot', html: createFaceRecognition(), delay: 5000 },
-                { type: 'bot', html: '<div class="complete-badge"><span>🎉</span><span>KYC 认证完成！</span></div><div style="margin-top: 8px; font-size: 13px; color: #888;">您的Binance账户已成功注册并通过KYC验证，现在可以开始交易了！</div>', delay: 500 }
+                { type:'user', text: zh ? '我想注册binance账户并完成KYC认证' : 'I want to register a Binance account and complete KYC verification', delay:500 },
+                { type:'bot', text: zh ? '好的！我来帮你完成。让我先安装 Binance skill...' : 'Sure! Let me help you with that. Let me install the Binance skill first...', delay:1000 },
+                { type:'bot', html:'progress', delay:2500 },
+                { type:'bot', text: zh ? '✅ Binance skill 已安装！现在开始注册和KYC流程。' : '✅ Binance skill installed! Let\'s start the registration and KYC process.', delay:500 },
+                { type:'bot', text: zh ? '我已经有你的个人信息了，让我确认一下：' : 'I already have your personal information. Let me confirm:', delay:1000 },
+                { type:'bot', html:'infocard', delay:500 },
+                { type:'bot', text: zh ? '信息是否正确？' : 'Is this information correct?', delay:800,
+                  quickReplies: zh ? ['✅ 确认','❌ 需要修改'] : ['✅ Confirm','❌ Need to modify'] },
+                { type:'user', text: zh ? '✅ 确认' : '✅ Confirm', delay:1000 },
+                { type:'bot', text: zh ? '太好了！让我检查一下证件信息...' : 'Great! Let me check your document information...', delay:1000 },
+                { type:'bot', text: zh ? '✅ 已找到您之前上传的身份证件！' : '✅ Found your previously uploaded ID document!', delay:800 },
+                { type:'bot', text: zh ? '现在只需要进行人脸识别验证即可完成。请保持面部清晰可见。' : 'Now we just need facial recognition to complete. Please keep your face clearly visible.', delay:1000 },
+                { type:'bot', html:'face', delay:5000 },
+                { type:'bot', html:'complete', delay:500 },
             ]
         };
+    }
 
-        function createProgressBar() {
-            return `
-                <div style="padding: 8px 0;">
-                    <div style="font-size: 13px; color: #888; margin-bottom: 6px;">正在安装 Binance skill...</div>
-                    <div class="progress-bar">
-                        <div class="progress-fill"></div>
-                    </div>
-                </div>
-            `;
-        }
+    function makeProgressHTML() {
+        return '<div style="padding:8px 0;"><div style="font-size:13px;color:#888;margin-bottom:6px;">'+T('installing')+'</div><div class="progress-bar"><div class="progress-fill"></div></div></div>';
+    }
 
-        function createInfoCard() {
-            return `
-                <div class="info-card">
-                    <div class="info-card-row">
-                        <span class="info-card-label">姓名</span>
-                        <span class="info-card-value">张三</span>
-                    </div>
-                    <div class="info-card-row">
-                        <span class="info-card-label">出生日期</span>
-                        <span class="info-card-value">1990-01-15</span>
-                    </div>
-                    <div class="info-card-row">
-                        <span class="info-card-label">国籍</span>
-                        <span class="info-card-value">中国</span>
-                    </div>
-                    <div class="info-card-row">
-                        <span class="info-card-label">地址</span>
-                        <span class="info-card-value">北京市朝阳区建国路88号</span>
-                    </div>
-                    <div class="info-card-row">
-                        <span class="info-card-label">证件类型</span>
-                        <span class="info-card-value">身份证</span>
-                    </div>
-                </div>
-            `;
-        }
+    function makeInfoCardHTML() {
+        const zh = lang === 'zh';
+        const rows = zh
+            ? [['姓名','张三'],['出生日期','1990-01-15'],['国籍','中国'],['地址','北京市朝阳区建国路88号'],['证件类型','身份证']]
+            : [['Name','John Smith'],['Date of Birth','1990-01-15'],['Nationality','United States'],['Address','123 Main St, New York, NY 10001'],['Document','Passport']];
+        return '<div class="info-card">' + rows.map(r =>
+            '<div class="info-card-row"><span class="info-card-label">'+r[0]+'</span><span class="info-card-value">'+r[1]+'</span></div>'
+        ).join('') + '</div>';
+    }
 
-        function createFaceRecognition() {
+    function makeFaceHTML() {
+        return '<div class="face-recognition"><div class="face-scan-container"><div class="scan-frame"></div><div class="cartoon-face"><div class="face-circle"><div class="face-eye left"></div><div class="face-eye right"></div><div class="face-smile"></div></div></div></div><div class="scan-status">'+T('scanPrepare')+'</div></div>';
+    }
+
+    function startFaceScan() {
+        setTimeout(() => {
+            const el = document.querySelector('.scan-status');
+            if (!el) return;
+            el.textContent = T('scanScanning');
             setTimeout(() => {
-                const statusEl = document.querySelector('.scan-status');
-                if (statusEl) {
-                    statusEl.textContent = '正在扫描...';
-                    setTimeout(() => {
-                        statusEl.textContent = '检测活体...';
-                        setTimeout(() => {
-                            statusEl.textContent = '✅ 匹配成功';
-                            statusEl.style.color = '#4ade80';
-                        }, 1500);
-                    }, 1500);
-                }
-            }, 100);
+                if (!document.querySelector('.scan-status')) return;
+                el.textContent = T('scanLiveness');
+                setTimeout(() => {
+                    if (!document.querySelector('.scan-status')) return;
+                    el.textContent = T('scanSuccess');
+                    el.style.color = '#4ade80';
+                }, 1500);
+            }, 1500);
+        }, 100);
+    }
 
-            return `
-                <div class="face-recognition">
-                    <div class="face-scan-container">
-                        <div class="scan-frame"></div>
-                        <div class="cartoon-face">
-                            <div class="face-circle">
-                                <div class="face-eye left"></div>
-                                <div class="face-eye right"></div>
-                                <div class="face-smile"></div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="scan-status">准备中...</div>
-                </div>
-            `;
+    function makeCompleteHTML() {
+        return '<div class="complete-badge"><span>🎉</span><span>'+T('completeBadge').replace('🎉 ','')+'</span></div><div style="margin-top:8px;font-size:13px;color:#888;">'+T('completeMsg')+'</div>';
+    }
+
+    function resolveHTML(key) {
+        if (key === 'progress') return makeProgressHTML();
+        if (key === 'infocard') return makeInfoCardHTML();
+        if (key === 'face') { startFaceScan(); return makeFaceHTML(); }
+        if (key === 'complete') return makeCompleteHTML();
+        return key;
+    }
+
+    function addMessage(type, content, quickReplies) {
+        const c = document.getElementById('chat-messages');
+        const d = document.createElement('div'); d.className = 'message ' + type;
+        const av = document.createElement('div'); av.className = 'message-avatar';
+        av.textContent = type === 'bot' ? '🐾' : '👤';
+        const cd = document.createElement('div'); cd.className = 'message-content';
+        const b = document.createElement('div'); b.className = 'message-bubble';
+        if (content.includes('<div') || content.includes('<span')) b.innerHTML = content;
+        else b.textContent = content;
+        cd.appendChild(b);
+        if (quickReplies && quickReplies.length) {
+            const qr = document.createElement('div'); qr.className = 'quick-replies';
+            quickReplies.forEach(r => {
+                const btn = document.createElement('button'); btn.className = 'quick-reply-btn';
+                btn.textContent = r;
+                btn.onclick = () => { document.getElementById('chat-input').value = r; sendUserMessage(); };
+                qr.appendChild(btn);
+            });
+            cd.appendChild(qr);
         }
+        d.appendChild(av); d.appendChild(cd); c.appendChild(d);
+        c.scrollTop = c.scrollHeight;
+    }
 
-        function addMessage(type, content, quickReplies = null) {
-            const messagesContainer = document.getElementById('chat-messages');
-            
-            const messageDiv = document.createElement('div');
-            messageDiv.className = `message ${type}`;
-            
-            const avatar = document.createElement('div');
-            avatar.className = 'message-avatar';
-            avatar.textContent = type === 'bot' ? '🐾' : '👤';
-            
-            const contentDiv = document.createElement('div');
-            contentDiv.className = 'message-content';
-            
-            const bubble = document.createElement('div');
-            bubble.className = 'message-bubble';
-            
-            if (typeof content === 'string' && content.includes('<div')) {
-                bubble.innerHTML = content;
-            } else {
-                bubble.textContent = content;
-            }
-            
-            contentDiv.appendChild(bubble);
-            
-            if (quickReplies && quickReplies.length > 0) {
-                const repliesDiv = document.createElement('div');
-                repliesDiv.className = 'quick-replies';
-                quickReplies.forEach(reply => {
-                    const btn = document.createElement('button');
-                    btn.className = 'quick-reply-btn';
-                    btn.textContent = reply;
-                    btn.onclick = () => {
-                        document.getElementById('chat-input').value = reply;
-                        sendUserMessage();
-                    };
-                    repliesDiv.appendChild(btn);
-                });
-                contentDiv.appendChild(repliesDiv);
-            }
-            
-            messageDiv.appendChild(avatar);
-            messageDiv.appendChild(contentDiv);
-            messagesContainer.appendChild(messageDiv);
-            
-            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    function showTyping() {
+        const c = document.getElementById('chat-messages');
+        const d = document.createElement('div'); d.className = 'message bot'; d.id = 'typing-indicator';
+        const av = document.createElement('div'); av.className = 'message-avatar'; av.textContent = '🐾';
+        const ti = document.createElement('div'); ti.className = 'typing-indicator';
+        ti.innerHTML = '<div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div>';
+        d.appendChild(av); d.appendChild(ti); c.appendChild(d);
+        c.scrollTop = c.scrollHeight;
+    }
+
+    function hideTyping() { const t = document.getElementById('typing-indicator'); if (t) t.remove(); }
+
+    async function playScenario(scenario) {
+        playingAbort = false;
+        const msgs = getScenarios()[scenario];
+        for (let i = 0; i < msgs.length; i++) {
+            if (playingAbort) return;
+            const m = msgs[i];
+            await new Promise(r => setTimeout(r, m.delay));
+            if (playingAbort) return;
+            if (m.type === 'bot') { showTyping(); await new Promise(r => setTimeout(r, 800)); if (playingAbort) return; hideTyping(); }
+            const content = m.html ? resolveHTML(m.html) : m.text;
+            addMessage(m.type, content, m.quickReplies);
         }
+    }
 
-        function showTypingIndicator() {
-            const messagesContainer = document.getElementById('chat-messages');
-            const typingDiv = document.createElement('div');
-            typingDiv.className = 'message bot';
-            typingDiv.id = 'typing-indicator';
-            
-            const avatar = document.createElement('div');
-            avatar.className = 'message-avatar';
-            avatar.textContent = '🐾';
-            
-            const indicator = document.createElement('div');
-            indicator.className = 'typing-indicator';
-            indicator.innerHTML = '<div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div>';
-            
-            typingDiv.appendChild(avatar);
-            typingDiv.appendChild(indicator);
-            messagesContainer.appendChild(typingDiv);
-            messagesContainer.scrollTop = messagesContainer.scrollHeight;
-        }
+    function updateUI() {
+        document.getElementById('page-title').textContent = T('title');
+        document.getElementById('page-subtitle').textContent = T('subtitle');
+        document.getElementById('btn-no-info').textContent = T('btnNoInfo');
+        document.getElementById('btn-has-info').textContent = T('btnHasInfo');
+        document.getElementById('chat-title').textContent = T('chatTitle');
+        document.getElementById('chat-status').textContent = T('chatStatus');
+        document.getElementById('chat-input').placeholder = T('placeholder');
+        document.getElementById('lang-btn').textContent = lang === 'zh' ? 'EN' : '中文';
+    }
 
-        function hideTypingIndicator() {
-            const indicator = document.getElementById('typing-indicator');
-            if (indicator) {
-                indicator.remove();
-            }
-        }
+    function toggleLang() {
+        lang = lang === 'zh' ? 'en' : 'zh';
+        updateUI();
+        restartScenario();
+    }
 
-        async function playScenario(scenario) {
-            const messages = scenarios[scenario];
-            
-            for (let i = 0; i < messages.length; i++) {
-                const msg = messages[i];
-                
-                await new Promise(resolve => setTimeout(resolve, msg.delay));
-                
-                if (msg.type === 'bot') {
-                    showTypingIndicator();
-                    await new Promise(resolve => setTimeout(resolve, 800));
-                    hideTypingIndicator();
-                }
-                
-                const content = msg.html || msg.text;
-                addMessage(msg.type, content, msg.quickReplies);
-                
-                if (msg.callback) {
-                    msg.callback();
-                }
-            }
-        }
+    function switchScenario(s) {
+        currentScenario = s;
+        document.getElementById('btn-no-info').classList.toggle('active', s === 'no-info');
+        document.getElementById('btn-has-info').classList.toggle('active', s === 'has-info');
+        restartScenario();
+    }
 
-        function switchScenario(scenario) {
-            currentScenario = scenario;
-            
-            document.getElementById('btn-no-info').classList.toggle('active', scenario === 'no-info');
-            document.getElementById('btn-has-info').classList.toggle('active', scenario === 'has-info');
-            
-            const messagesContainer = document.getElementById('chat-messages');
-            messagesContainer.innerHTML = '';
-            
-            conversationState = { stage: 'initial', userData: {} };
-            
-            playScenario(scenario);
-        }
+    function restartScenario() {
+        playingAbort = true;
+        document.getElementById('chat-messages').innerHTML = '';
+        setTimeout(() => playScenario(currentScenario), 100);
+    }
 
-        function sendUserMessage() {
-            const input = document.getElementById('chat-input');
-            const text = input.value.trim();
-            
-            if (!text) return;
-            
-            addMessage('user', text);
-            input.value = '';
-        }
+    function sendUserMessage() {
+        const inp = document.getElementById('chat-input');
+        const t = inp.value.trim(); if (!t) return;
+        addMessage('user', t); inp.value = '';
+    }
 
-        document.getElementById('chat-input').addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') {
-                sendUserMessage();
-            }
-        });
+    document.getElementById('chat-input').addEventListener('keypress', e => { if (e.key === 'Enter') sendUserMessage(); });
 
-        // Auto-start on page load
-        window.addEventListener('load', () => {
-            playScenario(currentScenario);
-        });
+    window.addEventListener('load', () => { updateUI(); playScenario(currentScenario); });
     </script>
 </body>
 </html>
